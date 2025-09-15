@@ -1,0 +1,212 @@
+// lib/prompts/resume/tailoring.ts
+import { PromptConfig } from '../types'
+import { MODELS, TEMPERATURE, TAGS } from '../constants'
+import { SYSTEM_ROLES } from '../shared/system-roles'
+
+export const RESUME_TAILORING_PROMPTS: Record<string, PromptConfig> = {
+// Replace the ATS_OPTIMIZED entry
+  ATS_OPTIMIZED: {
+    id: 'resume-tailoring-ats',
+    name: 'ATS-Optimized Resume Tailoring',
+    description: 'Resume optimization for ATS systems and recruiter appeal',
+    systemRole: SYSTEM_ROLES.RESUME_OPTIMIZATION_SPECIALIST,
+    userTemplate: `You are tailoring a resume strictly based on provided inputs.
+
+  INPUTS:
+  - Job Title: {jobTitle}
+  - Company: {company}
+  - Job Description: {jobDescription}
+  - Current Resume: {resume}
+  - User Request: {userRequest}
+
+  RULES (do all):
+  1) Do NOT invent roles, dates, companies, degrees, certifications, or metrics.
+  2) Only add content if implied by resume; if you must suggest, prefix with [SUGGESTED] and keep minimal.
+  3) Prefer concise bullets; start with strong action verbs; quantify only if numbers exist in the resume.
+  4) Optimize for ATS keywords from the job description without keyword stuffing.
+  5) No emojis, no extraneous markdown decorations.
+
+  STEPS:
+  A) Extract 10–20 critical keywords/phrases from the job description.
+  B) Map each keyword to exact resume evidence (or mark as missing).
+  C) Apply strictly-justified edits to improve alignment.
+
+  Respond with:
+  UPDATED_RESUME:
+  [Complete updated resume in clean markdown format — no leading/trailing ** or code fences]
+
+  CHANGE_SUMMARY:
+  - Key edits (max 6 bullets)
+  - Sections touched
+  - Rationale per edit (brief)
+
+  MISSING_KEYWORDS:
+  [List keywords not clearly evidenced in the resume]
+
+  RISKS:
+  [Brief risks introduced by edits, if any]
+
+  FOLLOW_UP_QUESTIONS:
+  [Up to 3 short questions for missing info that would materially improve the resume]
+
+  IMPORTANT: Do not add ** or any other markdown artifacts at the beginning or end of the resume     │
+ │   content. Return clean, properly formatted markdown.`,   
+    model: MODELS.GPT5_MINI,
+    temperature: TEMPERATURE.PRECISE,
+    responseFormat: {
+      type: 'text',
+      examples: [
+        'UPDATED_RESUME:\n[resume]\n\nCHANGE_SUMMARY:\n[bullets]\n\nMISSING_KEYWORDS:\n[list]\n\nRISKS:\n[list]\n\nFOLLOW_UP_QUESTIONS:\n[list]'
+      ]
+    },
+    version: '1.1.0',
+    tags: [TAGS.TAILORING, TAGS.ATS, 'resume']
+  },
+
+  ADVISORY: {
+    id: 'resume-tailoring-advisory',
+    name: 'Resume Tailoring Advisory',
+    description: 'Resume advice for job-specific tailoring without making changes',
+    systemRole: SYSTEM_ROLES.CAREER_ADVISOR,
+    userTemplate: `You are providing advice to help a candidate understand how to tailor their resume for a specific job opportunity.
+
+INPUTS:
+- Job Title: {jobTitle}
+- Company: {company}
+- Job Description: {jobDescription}
+- Current Resume: {resume}
+- User Question: {userRequest}
+
+Please analyze the job requirements against the current resume and provide specific, actionable advice. Focus on:
+1. Key areas that need improvement
+2. Specific skills/experiences to highlight
+3. Keywords to incorporate
+4. Formatting suggestions
+5. Content recommendations
+
+Provide helpful advice without making actual changes to the resume.`,
+    model: MODELS.GPT5_MINI,
+    temperature: TEMPERATURE.CREATIVE,
+    responseFormat: { type: 'text' },
+    version: '1.0.0',
+    tags: [TAGS.TAILORING, TAGS.ADVISORY, 'resume']
+  },
+
+  QA_ASSISTANT: {
+    id: 'resume-tailoring-qa',
+    name: 'Resume Q&A Assistant',
+    description: 'Answer specific questions about resume content and job fit',
+    systemRole: SYSTEM_ROLES.CAREER_ADVISOR,
+    userTemplate: `You are helping a candidate understand how their background relates to a specific job opportunity. Use both the resume and job description as primary sources to answer questions accurately.
+
+INPUTS:
+- Job Title: {jobTitle}
+- Company: {company}
+- Job Description: {jobDescription}
+- Current Resume: {resume}
+- User Question: {userRequest}
+
+Answer the user's question by intelligently using the most relevant source(s):
+
+FOR QUESTIONS ABOUT THE COMPANY/JOB:
+- Use the job description as the primary source for company details, job requirements, responsibilities, culture, etc.
+- Example: "tell me about the company" → extract company information from the job description
+
+FOR QUESTIONS ABOUT THE CANDIDATE:
+- Use the resume as the primary source for experience, skills, background, achievements, etc.
+- Example: "what experience do I have in X?" → look in the resume for relevant experience
+
+FOR QUESTIONS ABOUT FIT/ALIGNMENT:
+- Use BOTH sources to analyze how the candidate's background (resume) aligns with the job requirements (job description)
+- Example: "am I qualified for this role?" → compare resume experience with job requirements
+
+IMPORTANT: 
+- Answer questions directly and factually based on the provided information
+- Do NOT provide improvement suggestions unless specifically asked
+- Be honest about what is and isn't mentioned in the sources
+- Reference specific details from the relevant source(s)`,
+    model: MODELS.GPT5_MINI,
+    temperature: TEMPERATURE.BALANCED,
+    responseFormat: { type: 'text' },
+    version: '1.0.0',
+    tags: [TAGS.TAILORING, 'qa', 'resume', 'assistant']
+  },
+
+  PROFESSIONAL_ENHANCEMENT: {
+    id: 'resume-tailoring-professional',
+    name: 'Professional Resume Enhancement',
+    description: 'Comprehensive resume enhancement for professional presentation',
+    systemRole: SYSTEM_ROLES.EXPERT_RESUME_WRITER,
+    userTemplate: `You are helping enhance a resume for a specific job opportunity with a focus on professional presentation and impact.
+
+INPUTS:
+- Job Title: {jobTitle}
+- Company: {company}
+- Job Description: {jobDescription}
+- Current Resume: {resume}
+- Enhancement Request: {userRequest}
+
+Please enhance the resume by:
+1. Improving professional language and impact statements
+2. Quantifying achievements where possible
+3. Optimizing for the specific role and company
+4. Ensuring professional formatting and structure
+5. Highlighting transferable skills
+
+Respond with:
+UPDATED_RESUME:
+[The enhanced resume in markdown format]
+
+CHANGE_SUMMARY:
+[Detailed summary of enhancements made and their impact]`,
+    model: MODELS.GPT5_MINI,
+    temperature: TEMPERATURE.BALANCED,
+    responseFormat: {
+      type: 'text',
+      examples: [
+        'UPDATED_RESUME:\n[enhanced resume content]\n\nCHANGE_SUMMARY:\n[detailed summary of enhancements]'
+      ]
+    },
+    version: '1.0.0',
+    tags: [TAGS.TAILORING, TAGS.PROFESSIONAL, 'resume']
+  },
+
+  INDUSTRY_SPECIFIC: {
+    id: 'resume-tailoring-industry',
+    name: 'Industry-Specific Resume Tailoring',
+    description: 'Tailor resume for specific industry requirements and norms',
+    systemRole: SYSTEM_ROLES.RESUME_OPTIMIZATION_SPECIALIST,
+    userTemplate: `You are helping tailor a resume for a specific industry and role, focusing on industry-specific requirements and conventions.
+
+INPUTS:
+- Job Title: {jobTitle}
+- Company: {company}
+- Job Description: {jobDescription}
+- Current Resume: {resume}
+- Tailoring Request: {userRequest}
+
+Please tailor the resume considering:
+1. Industry-specific terminology and keywords
+2. Relevant certifications and qualifications
+3. Industry-standard formatting and structure
+4. Key metrics and achievements valued in this industry
+5. Technical skills and tools commonly used
+
+Respond with:
+UPDATED_RESUME:
+[The industry-tailored resume in markdown format]
+
+CHANGE_SUMMARY:
+[Summary of industry-specific changes and their relevance]`,
+    model: MODELS.GPT5_MINI,
+    temperature: TEMPERATURE.BALANCED,
+    responseFormat: {
+      type: 'text',
+      examples: [
+        'UPDATED_RESUME:\n[industry-tailored resume]\n\nCHANGE_SUMMARY:\n[industry-specific changes summary]'
+      ]
+    },
+    version: '1.0.0',
+    tags: [TAGS.TAILORING, 'industry', 'resume']
+  }
+}

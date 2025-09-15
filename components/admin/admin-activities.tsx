@@ -1,0 +1,414 @@
+"use client"
+
+import { useEffect, useState, useMemo } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Loader2, AlertCircle, ArrowUpDown, Activity } from "lucide-react"
+import { useAuth } from "@/components/auth-provider"
+import { auth } from "@/lib/firebase"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart"
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, LineChart, Line } from "recharts"
+
+// Define the structure of an activity log
+interface ActivityLog {
+  id: string
+  userId: string
+  userName: string
+  activityType: string
+  tokenUsage: number
+  timeTaken: number
+  timestamp: string // Now a string (ISO format)
+  metadata?: Record<string, any>
+}
+
+type SortKey = keyof ActivityLog | 'userName'
+
+export function AdminActivities() {
+  const { user } = useAuth()
+  const [activities, setActivities] = useState<ActivityLog[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // State for filtering
+  const [userNameFilter, setUserNameFilter] = useState("")
+  const [activityTypeFilter, setActivityTypeFilter] = useState("")
+
+  // State for sorting
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
+    key: 'timestamp',
+    direction: 'descending',
+  })
+
+  const isAdmin = user?.email === "jsong@koreatous.com"
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!user || !auth?.currentUser || !isAdmin) {
+        setLoading(false)
+        return
+      }
+
+      setLoading(true)
+      setError(null)
+      try {
+        const token = await auth.currentUser.getIdToken()
+        const response = await fetch("/api/admin/activities", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setActivities(data.activities || [])
+        } else {
+          const errorData = await response.json()
+          setError(errorData.error || "Failed to fetch activities.")
+        }
+      } catch (err) {
+        setError("An error occurred while fetching activities.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (isAdmin) {
+      fetchActivities()
+    }
+  }, [user, isAdmin])
+  
+  // Get unique activity types for the filter dropdown
+  const activityTypes = useMemo(() => {
+    const types = new Set(activities.map(a => a.activityType))
+    return Array.from(types).sort()
+  }, [activities])
+
+  // Memoized filtering and sorting
+  const sortedAndFilteredActivities = useMemo(() => {
+    let filtered = [...activities]
+
+    if (userNameFilter) {
+      filtered = filtered.filter(a => a.userName.toLowerCase().includes(userNameFilter.toLowerCase()))
+    }
+    if (activityTypeFilter) {
+      filtered = filtered.filter(a => a.activityType === activityTypeFilter)
+    }
+    
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof ActivityLog] ?? ''
+        const bValue = b[sortConfig.key as keyof ActivityLog] ?? ''
+
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1
+        }
+        return 0
+      })
+    }
+
+    return filtered
+  }, [activities, userNameFilter, activityTypeFilter, sortConfig])
+
+  const requestSort = (key: SortKey) => {
+    let direction: 'ascending' | 'descending' = 'ascending'
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending'
+    }
+    setSortConfig({ key, direction })
+  }
+
+  const getSortIcon = (key: SortKey) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+    }
+    return sortConfig.direction === 'ascending' ? '▲' : '▼'
+  }
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A"
+    const date = new Date(dateString)
+    return isNaN(date.getTime()) ? "Invalid Date" : date.toLocaleString()
+  }
+
+  // Helpers and aggregations for charts
+  const formatDayKey = (dateString: string) => {
+    const d = new Date(dateString)
+    if (isNaN(d.getTime())) return "Invalid"
+    // yyyy-mm-dd (locale independent stable sort)
+    return d.toLocaleDateString("en-CA")
+  }
+
+  const {
+    countsByDate,
+    tokensByDate,
+    tokenByUser,
+    stackedByUserType,
+    stackedTypes,
+    typeColors,
+  } = useMemo(() => {
+    const filtered = sortedAndFilteredActivities
+    const countsByDateMap = new Map<string, number>()
+    const tokensByDateMap = new Map<string, number>()
+    const tokenByUserMap = new Map<string, number>()
+    const userTypeAgg = new Map<string, Record<string, number>>()
+    const typesSet = new Set<string>()
+
+    filtered.forEach(a => {
+      const day = formatDayKey(a.timestamp)
+      countsByDateMap.set(day, (countsByDateMap.get(day) || 0) + 1)
+      tokensByDateMap.set(day, (tokensByDateMap.get(day) || 0) + (a.tokenUsage ?? 0))
+
+      tokenByUserMap.set(a.userName, (tokenByUserMap.get(a.userName) || 0) + (a.tokenUsage ?? 0))
+
+      typesSet.add(a.activityType)
+      const perUser = userTypeAgg.get(a.userName) || {}
+      perUser[a.activityType] = (perUser[a.activityType] || 0) + 1
+      userTypeAgg.set(a.userName, perUser)
+    })
+
+    const countsByDate = Array.from(countsByDateMap.entries())
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([date, count]) => ({ date, count }))
+
+    const tokensByDate = Array.from(tokensByDateMap.entries())
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([date, tokens]) => ({ date, tokens }))
+
+    const tokenByUser = Array.from(tokenByUserMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([user, tokens]) => ({ user, tokens }))
+
+    const stackedTypes = Array.from(typesSet.values()).sort()
+
+    const stackedByUserType = Array.from(userTypeAgg.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([user, perType]) => {
+        const row: Record<string, number | string> = { user }
+        stackedTypes.forEach(t => { row[t] = perType[t] || 0 })
+        return row
+      })
+
+    const palette = [
+      "hsl(220 90% 56%)",
+      "hsl(160 84% 39%)",
+      "hsl(27 96% 61%)",
+      "hsl(280 72% 60%)",
+      "hsl(0 84% 60%)",
+      "hsl(200 98% 39%)",
+      "hsl(340 82% 52%)",
+      "hsl(45 93% 47%)",
+    ]
+    const typeColors: Record<string, string> = {}
+    stackedTypes.forEach((t, i) => { typeColors[t] = palette[i % palette.length] })
+
+    return { countsByDate, tokensByDate, tokenByUser, stackedByUserType, stackedTypes, typeColors }
+  }, [sortedAndFilteredActivities])
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-5 w-5" />
+          All User Activities
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Filtering Controls */}
+        <div className="flex items-center gap-4 mb-6">
+          <Input
+            placeholder="Filter by User Name..."
+            value={userNameFilter}
+            onChange={(e) => setUserNameFilter(e.target.value)}
+            className="max-w-xs"
+          />
+          <Select
+            value={activityTypeFilter}
+            onValueChange={(value) => setActivityTypeFilter(value === "all" ? "" : value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Filter by Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {activityTypes.map(type => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : activities.length === 0 ? (
+          <div className="text-center py-16">
+            <h3 className="text-xl font-semibold mb-2">No Activities Found</h3>
+            <p className="text-muted-foreground">There are no user activities to display yet.</p>
+          </div>
+        ) : (
+          <Tabs defaultValue="table" className="w-full">
+            <TabsList>
+              <TabsTrigger value="table">Table</TabsTrigger>
+              <TabsTrigger value="charts">Charts</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="table">
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <Button variant="ghost" onClick={() => requestSort('userName')}>
+                          User {getSortIcon('userName')}
+                        </Button>
+                      </TableHead>
+                      <TableHead>
+                        <Button variant="ghost" onClick={() => requestSort('activityType')}>
+                          Activity Type {getSortIcon('activityType')}
+                        </Button>
+                      </TableHead>
+                      <TableHead>
+                        <Button variant="ghost" onClick={() => requestSort('timestamp')}>
+                          Timestamp {getSortIcon('timestamp')}
+                        </Button>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <Button variant="ghost" onClick={() => requestSort('tokenUsage')}>
+                          Token Usage {getSortIcon('tokenUsage')}
+                        </Button>
+                      </TableHead>
+                      <TableHead className="text-right">
+                        <Button variant="ghost" onClick={() => requestSort('timeTaken')}>
+                          Time Taken (s) {getSortIcon('timeTaken')}
+                        </Button>
+                      </TableHead>
+                      <TableHead>Metadata</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedAndFilteredActivities.map((activity) => (
+                      <TableRow key={activity.id}>
+                        <TableCell>
+                          <div className="font-medium">{activity.userName}</div>
+                          <div className="font-mono text-xs text-muted-foreground">{activity.userId}</div>
+                        </TableCell>
+                        <TableCell>{activity.activityType}</TableCell>
+                        <TableCell>{formatDate(activity.timestamp)}</TableCell>
+                        <TableCell className="text-right">{activity.tokenUsage}</TableCell>
+                        <TableCell className="text-right">{activity.timeTaken.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto max-w-xs">
+                            {JSON.stringify(activity.metadata, null, 2)}
+                          </pre>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="charts">
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Activities by Date</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={{ count: { label: "Activities", color: "hsl(220 90% 56%)" } }}>
+                      <LineChart data={countsByDate}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis allowDecimals={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey="count" stroke="hsl(220 90% 56%)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Token Usage by Date</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(160 84% 39%)" } }}>
+                      <LineChart data={tokensByDate}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Line type="monotone" dataKey="tokens" stroke="hsl(160 84% 39%)" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Activity Type by User</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer
+                      config={stackedTypes.reduce((acc, t) => {
+                        acc[t] = { label: t, color: typeColors[t] }
+                        return acc
+                      }, {} as Record<string, { label: string; color: string }>)}
+                    >
+                      <BarChart data={stackedByUserType}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="user" />
+                        <YAxis allowDecimals={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        {stackedTypes.map((t) => (
+                          <Bar key={t} dataKey={t} stackId="a" fill={typeColors[t]} />
+                        ))}
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Token Usage by User</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ChartContainer config={{ tokens: { label: "Tokens", color: "hsl(27 96% 61%)" } }}>
+                      <BarChart data={tokenByUser}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="user" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="tokens" fill="hsl(27 96% 61%)" />
+                      </BarChart>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
