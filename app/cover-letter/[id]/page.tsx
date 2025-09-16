@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Send, Loader2, Download, MessageSquare, FileText, Edit3, Copy, Save } from "lucide-react"
+import { ArrowLeft, Send, Loader2, Download, MessageSquare, FileText, Edit3, Copy, Save, Check } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
@@ -42,6 +42,7 @@ export default function CoverLetterPage({ params }: CoverLetterPageProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isEdit, setIsEdit] = useState(false)
   const [isReadyForGeneration, setIsReadyForGeneration] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Fetch data on mount
@@ -415,6 +416,28 @@ ${currentCoverLetter}`
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   }
 
+  // Copy message content to clipboard
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopiedMessageId(messageId)
+      toast({
+        description: "Response copied to clipboard!",
+        duration: 2000,
+      })
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedMessageId(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      toast({
+        title: "Copy failed",
+        description: "Please try again or copy manually.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -597,12 +620,26 @@ ${currentCoverLetter}`
                         }`}
                       >
                         <div
-                          className={`rounded-lg px-4 py-2 max-w-[80%] break-words overflow-hidden ${
+                          className={`rounded-lg px-4 py-2 max-w-[80%] break-words overflow-hidden relative group ${
                             message.type === "user"
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted"
                           }`}
                         >
+                          {message.type === "ai" && message.content && (
+                            <Button
+                              onClick={() => handleCopyMessage(message.id, message.content)}
+                              variant="ghost"
+                              size="sm"
+                              className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity"
+                            >
+                              {copiedMessageId === message.id ? (
+                                <Check className="h-3 w-3" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </Button>
+                          )}
                           <div className={`text-sm break-words whitespace-pre-wrap ${message.type === "user" ? "text-primary-foreground" : ""}`} style={{ overflowWrap: 'anywhere', wordWrap: 'break-word', wordBreak: 'break-word' }}>
                             {message.type === "user" ? (
                               <p>{message.content}</p>

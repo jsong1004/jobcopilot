@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Debug Test</title>
+    <style>
+        .btn {
+            padding: 12px 24px;
+            margin: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Button Test Page</h1>
+    <p>Testing if buttons work in isolation:</p>
+
+    <button class="btn" onclick="alert('Get Started button clicked!')">
+        Get Started Free
+    </button>
+
+    <button class="btn btn-outline" onclick="alert('Sign In button clicked!')">
+        Sign In
+    </button>
+
+    <p>If these buttons work, the issue is with React hydration or auth state.</p>
+
+    <script>
+        console.log('Debug script loaded');
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+        });
+    </script>
+</body>
+</html>

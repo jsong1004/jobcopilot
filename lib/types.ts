@@ -62,6 +62,12 @@ export interface SavedJob {
   notes?: string // User notes about the application
   reminderDate?: Timestamp // Date for follow-up reminder
   reminderNote?: string // Note for the reminder
+  // Background scoring fields
+  scoringStatus: 'pending' | 'in_progress' | 'completed' | 'failed'
+  scoringStartedAt?: Timestamp // When background scoring started
+  scoringCompletedAt?: Timestamp // When background scoring completed
+  matchingSummary?: string // Summary from scoring
+  scoreDetails?: any // Detailed scoring breakdown
   originalData: JobSearchResult // Full job data from SerpApi
 }
 

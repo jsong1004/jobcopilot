@@ -50,6 +50,16 @@ export interface MultiAgentTailoringResult extends TailoringOrchestrationResult 
   totalProcessingTime: number
 }
 
+export interface StreamingProgressUpdate {
+  type: 'agent_started' | 'agent_completed' | 'orchestration_started' | 'final_result'
+  agentType?: TailoringAgentType
+  message: string
+  completedAgents?: number
+  totalAgents?: number
+  content?: string
+  finalResult?: MultiAgentTailoringResult
+}
+
 /**
  * Execute a single tailoring agent with error handling and retry logic
  */
@@ -395,6 +405,169 @@ export async function calculateMultiAgentTailoring(
     console.error('💥 [MultiAgentTailoring] Tailoring failed:', error)
     throw new Error(`Multi-agent tailoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
+}
+
+/**
+ * Streaming version of multi-agent tailoring with real-time progress updates
+ */
+export function calculateMultiAgentTailoringStream(
+  resume: string,
+  jobDescription: string,
+  scoringAnalysis: any,
+  userRequest: string,
+  openRouterApiKey: string
+): ReadableStream<Uint8Array> {
+
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        console.log('🎬 [StreamingMultiAgent] Starting streaming multi-agent tailoring...')
+        const startTime = Date.now()
+
+        // Send initial progress update
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            type: 'agent_started',
+            message: '🚀 Starting 8 specialized agents in parallel...',
+            completedAgents: 0,
+            totalAgents: 8
+          })}\n\n`
+        ))
+
+        const agentTypes: TailoringAgentType[] = [
+          'technicalSkills',
+          'experienceReframing',
+          'achievementAmplification',
+          'atsOptimization',
+          'professionalSummary',
+          'educationCertifications',
+          'gapMitigation',
+          'industryAlignment'
+        ]
+
+        // Track completion status
+        let completedAgents = 0
+        const agentResults: Record<TailoringAgentType, TailoringAgentResult> = {} as any
+
+        // Execute all agents with streaming updates
+        const agentPromises = agentTypes.map(async (agentType) => {
+          try {
+            // Send agent start notification
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({
+                type: 'agent_started',
+                agentType,
+                message: `🎯 Starting ${agentType} agent...`,
+                completedAgents,
+                totalAgents: agentTypes.length
+              })}\n\n`
+            ))
+
+            const result = await executeTailoringAgent(
+              agentType,
+              resume,
+              jobDescription,
+              scoringAnalysis,
+              userRequest,
+              openRouterApiKey
+            )
+
+            agentResults[agentType] = result
+            completedAgents++
+
+            // Send agent completion notification
+            controller.enqueue(new TextEncoder().encode(
+              `data: ${JSON.stringify({
+                type: 'agent_completed',
+                agentType,
+                message: `✅ ${agentType} agent completed in ${result.executionTime}ms`,
+                completedAgents,
+                totalAgents: agentTypes.length
+              })}\n\n`
+            ))
+
+            return result
+          } catch (error) {
+            console.error(`❌ [${agentType}] Agent failed:`, error)
+            // Return fallback result
+            return {
+              agentType,
+              result: { error: error instanceof Error ? error.message : 'Unknown error' },
+              executedAt: new Date().toISOString(),
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            } as TailoringAgentResult
+          }
+        })
+
+        // Wait for all agents to complete
+        await Promise.all(agentPromises)
+
+        // Send orchestration start notification
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            type: 'orchestration_started',
+            message: '🔄 All agents completed! Starting final orchestration...',
+            completedAgents: agentTypes.length,
+            totalAgents: agentTypes.length
+          })}\n\n`
+        ))
+
+        // Organize agent results
+        const organizedResults: TailoringAgentResults = {
+          agents: agentResults,
+          executionMetadata: {
+            totalExecutionTime: Date.now() - startTime,
+            agentsExecuted: agentTypes.length,
+            timestamp: new Date().toISOString()
+          }
+        }
+
+        // Execute orchestration
+        const orchestrationResult = await executeTailoringOrchestrationAgent(
+          organizedResults,
+          resume,
+          jobDescription,
+          scoringAnalysis,
+          userRequest,
+          openRouterApiKey
+        )
+
+        const totalTime = Date.now() - startTime
+
+        const finalResult: MultiAgentTailoringResult = {
+          ...orchestrationResult,
+          agentResults: organizedResults,
+          processedAt: new Date().toISOString(),
+          totalProcessingTime: totalTime
+        }
+
+        // Send final result
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            type: 'final_result',
+            message: `🎉 Multi-agent tailoring completed in ${totalTime}ms`,
+            content: finalResult.finalTailoredResume,
+            finalResult: finalResult
+          })}\n\n`
+        ))
+
+        // Send completion signal
+        controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+
+      } catch (error) {
+        console.error('💥 [StreamingMultiAgent] Streaming failed:', error)
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            type: 'error',
+            message: `❌ Streaming failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          })}\n\n`
+        ))
+      } finally {
+        controller.close()
+      }
+    }
+  })
 }
 
 /**

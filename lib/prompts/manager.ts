@@ -233,6 +233,159 @@ export class PromptManager {
   }
 
   /**
+   * Execute a prompt with streaming response
+   */
+  async executePromptStream(request: PromptRequest): Promise<ReadableStream<Uint8Array>> {
+    try {
+      // Get prompt configuration
+      const prompt = this.getPrompt(request.promptId)
+      if (!prompt) {
+        throw new Error(`Prompt not found: ${request.promptId}`)
+      }
+
+      // Apply overrides if provided
+      const finalConfig = { ...prompt, ...request.overrides }
+
+      // Build the complete prompt
+      const { systemRole, userContent } = PromptBuilder.buildCompletePrompt(
+        finalConfig.systemRole,
+        finalConfig.userTemplate,
+        request.variables
+      )
+
+      if (GLOBAL_CONFIG.enableLogging) {
+        console.log(`Executing streaming prompt: ${request.promptId}`)
+      }
+
+      // Create streaming response
+      const self = this
+      return new ReadableStream({
+        async start(controller) {
+          try {
+            await self.callOpenRouterWithStream({
+              model: finalConfig.model,
+              messages: [
+                { role: 'system', content: systemRole },
+                { role: 'user', content: userContent }
+              ],
+              temperature: finalConfig.temperature ?? GLOBAL_CONFIG.defaultTemperature,
+              max_tokens: finalConfig.maxTokens ?? GLOBAL_CONFIG.defaultMaxTokens,
+              stream: true,
+              user: request.context?.userId
+            }, controller)
+          } catch (error) {
+            controller.error(error)
+          } finally {
+            controller.close()
+          }
+        }
+      })
+
+    } catch (error) {
+      // Return error stream
+      return new ReadableStream({
+        start(controller) {
+          const errorMessage = `data: ${JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' })}\n\n`
+          controller.enqueue(new TextEncoder().encode(errorMessage))
+          controller.close()
+        }
+      })
+    }
+  }
+
+  /**
+   * Call OpenRouter API with streaming support
+   */
+  private async callOpenRouterWithStream(
+    params: any,
+    controller: ReadableStreamDefaultController<Uint8Array>
+  ): Promise<void> {
+    const apiKey = process.env.OPENROUTER_API_KEY
+    if (!apiKey) {
+      throw new Error('Missing OpenRouter API key')
+    }
+
+    const optimizedParams = {
+      ...params,
+      stream: true,
+      usage: { include: true },
+      ...(params.user && { user: `myjob_${params.user}` })
+    }
+
+    const response = await fetch(GLOBAL_CONFIG.apiEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'X-Title': 'MyJob AI Assistant'
+      },
+      body: JSON.stringify(optimizedParams),
+      signal: AbortSignal.timeout(GLOBAL_CONFIG.requestTimeout)
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`)
+    }
+
+    if (!response.body) {
+      throw new Error('No response body from OpenRouter')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) break
+
+        // Decode chunk and add to buffer
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete lines
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.trim() === '') continue
+
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+
+            if (data === '[DONE]') {
+              controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'))
+              return
+            }
+
+            try {
+              const parsed = JSON.parse(data)
+              const content = parsed.choices?.[0]?.delta?.content
+
+              if (content) {
+                // Send streaming content
+                const streamData = JSON.stringify({
+                  content,
+                  usage: parsed.usage,
+                  model: parsed.model
+                })
+                controller.enqueue(new TextEncoder().encode(`data: ${streamData}\n\n`))
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming response:', parseError)
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  }
+
+  /**
    * Generate cache key for request
    */
   private generateCacheKey(request: PromptRequest): string {

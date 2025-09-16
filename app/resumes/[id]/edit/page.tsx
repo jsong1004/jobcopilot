@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Send, Loader2, Save, Download, MessageSquare, FileText, Sparkles, Edit3 } from "lucide-react"
+import { ArrowLeft, Send, Loader2, Save, Download, MessageSquare, FileText, Sparkles, Edit3, Copy, Check } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
@@ -17,6 +17,7 @@ import { auth } from "@/lib/firebase"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import { useToast } from "@/hooks/use-toast"
 
 interface ResumeEditPageProps {
   params: Promise<{ id: string }>
@@ -25,6 +26,7 @@ interface ResumeEditPageProps {
 export default function ResumeEditPage({ params }: ResumeEditPageProps) {
   const { id } = use(params)
   const { user } = useAuth()
+  const { toast } = useToast()
 
   const [resume, setResume] = useState<Resume | null>(null)
   const [currentResume, setCurrentResume] = useState<string>("")
@@ -38,6 +40,7 @@ export default function ResumeEditPage({ params }: ResumeEditPageProps) {
   const [error, setError] = useState<string | null>(null)
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([])
   const [isEditMode, setIsEditMode] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
 
   // Fetch resume data on mount
   useEffect(() => {
@@ -279,6 +282,28 @@ export default function ResumeEditPage({ params }: ResumeEditPageProps) {
     })
   }
 
+  // Copy message content to clipboard
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopiedMessageId(messageId)
+      toast({
+        description: "Response copied to clipboard!",
+        duration: 2000,
+      })
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedMessageId(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      toast({
+        title: "Copy failed",
+        description: "Please try again or copy manually.",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <AuthProvider>
@@ -441,10 +466,24 @@ export default function ResumeEditPage({ params }: ResumeEditPageProps) {
                           className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                         >
                           <div
-                            className={`max-w-[80%] rounded-lg px-4 py-2 break-words overflow-hidden ${
+                            className={`max-w-[80%] rounded-lg px-4 py-2 break-words overflow-hidden relative group ${
                               message.type === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                             }`}
                           >
+                            {message.type === "ai" && message.content && (
+                              <Button
+                                onClick={() => handleCopyMessage(message.id, message.content)}
+                                variant="ghost"
+                                size="sm"
+                                className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity"
+                              >
+                                {copiedMessageId === message.id ? (
+                                  <Check className="h-3 w-3" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            )}
                             <div className={`text-sm break-words whitespace-pre-wrap ${message.type === "user" ? "text-blue-100" : ""}`} style={{ overflowWrap: 'anywhere', wordWrap: 'break-word', wordBreak: 'break-word' }}>
                               {message.type === "user" ? (
                                 <p>{message.content}</p>

@@ -15,7 +15,7 @@ export const GLOBAL_CONFIG = {
   apiEndpoint: 'https://openrouter.ai/api/v1/chat/completions',
   
   // Timeout settings
-  requestTimeout: 60000, // 60 seconds - increased for multi-agent processing
+  requestTimeout: 120000, // 120 seconds - increased for complex multi-agent processing
   
   // Retry settings
   maxRetries: 3,

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ArrowLeft, Send, Loader2, Save, Download, MessageSquare, FileText, Sparkles, Edit3 } from "lucide-react"
+import { ArrowLeft, Send, Loader2, Save, Download, MessageSquare, FileText, Sparkles, Edit3, Copy, Check } from "lucide-react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
@@ -46,6 +46,8 @@ export default function TailorResumePage({ params }: TailorResumePageProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [hasNoResume, setHasNoResume] = useState(false)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
+
 
   // Fetch job data and default resume on mount
   useEffect(() => {
@@ -224,15 +226,27 @@ export default function TailorResumePage({ params }: TailorResumePageProps) {
     generateSuggestions()
   }, [job, user])
 
+  // Copy message content to clipboard
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      setCopiedMessageId(messageId)
+      toast({
+        description: "Response copied to clipboard!",
+        duration: 2000,
+      })
+      setTimeout(() => setCopiedMessageId(null), 2000)
+    } catch (error) {
+      toast({
+        description: "Failed to copy response",
+        variant: "destructive",
+        duration: 2000,
+      })
+    }
+  }
+
   const handleSendMessage = async () => {
-    console.log("handleSendMessage called", { newMessage, job, user });
     if (!newMessage.trim() || !job || !user || !auth?.currentUser) {
-      console.log("Early return - missing requirements:", { 
-        hasMessage: !!newMessage.trim(), 
-        hasJob: !!job, 
-        hasUser: !!user, 
-        hasAuth: !!auth?.currentUser 
-      });
       return;
     }
 
@@ -266,58 +280,64 @@ export default function TailorResumePage({ params }: TailorResumePageProps) {
     }
 
     setChatMessages((prev) => [...prev, userMessage])
+    const currentMessageId = (Date.now() + 1).toString()
     setNewMessage("")
     setIsProcessing(true)
 
-    try {
-      const token = await auth.currentUser.getIdToken()
-      
-      console.log(`[Chat] Current resume length: ${currentResume?.length || 0}`)
-      console.log(`[Chat] Using legacy tailoring mode`)
-      
-      // Call OpenRouter API for AI resume tailoring or Q&A
-      const res = await fetch("/api/openrouter/tailor-resume", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          message: newMessage,
-          resume: currentResume,
-          jobTitle: job.title,
-          company: job.company,
-          jobDescription: job.fullDescription || job.description || "",
-          mode // pass mode to backend
-        }),
-      })
-      if (!res.ok) throw new Error("AI service error")
-      const data = await res.json()
-      const aiResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: "ai",
-        content: data.reply || "AI could not process your request.",
-        timestamp: new Date(),
-      }
-      setChatMessages((prev) => [...prev, aiResponse])
-      if (mode === "agent" && data.updatedResume) {
-        setCurrentResume(data.updatedResume)
-        // Exit edit mode when AI makes changes
-        setIsEditMode(false)
-      }
-      // In 'ask' mode, do not update resume
-    } catch (err) {
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 2).toString(),
+    // Use regular API call
+    {
+      try {
+        const token = await auth.currentUser.getIdToken()
+
+        console.log(`[Chat] Current resume length: ${currentResume?.length || 0}`)
+        console.log(`[Chat] Using legacy tailoring mode`)
+
+        const res = await fetch("/api/openrouter/tailor-resume", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            message: newMessage,
+            resume: currentResume,
+            jobTitle: job.title,
+            company: job.company,
+            jobDescription: job.fullDescription || job.description || "",
+            mode,
+            // Pass compressed history for better context retention
+            history: chatMessages.slice(-12).map(m => ({
+              role: m.type === 'user' ? 'user' : 'assistant',
+              content: m.content
+            }))
+          }),
+        })
+        if (!res.ok) throw new Error("AI service error")
+        const data = await res.json()
+        const aiResponse: ChatMessage = {
+          id: currentMessageId,
           type: "ai",
-          content: "Sorry, there was a problem with the AI service. Please try again later.",
+          content: data.reply || "AI could not process your request.",
           timestamp: new Date(),
-        },
-      ])
+        }
+        setChatMessages((prev) => [...prev, aiResponse])
+        if (mode === "agent" && data.updatedResume) {
+          setCurrentResume(data.updatedResume)
+          setIsEditMode(false)
+        }
+      } catch (err) {
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: currentMessageId,
+            type: "ai",
+            content: "Sorry, there was a problem with the AI service. Please try again later.",
+            timestamp: new Date(),
+          },
+        ])
+      }
+      setIsProcessing(false)
     }
-    setIsProcessing(false)
   }
 
   const handleDownloadResume = async () => {
@@ -589,10 +609,24 @@ export default function TailorResumePage({ params }: TailorResumePageProps) {
                         className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-lg px-4 py-2 break-words overflow-hidden ${
+                          className={`max-w-[80%] rounded-lg px-4 py-2 break-words overflow-hidden relative group ${
                             message.type === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                           }`}
                         >
+                          {message.type === "ai" && message.content && (
+                            <Button
+                              onClick={() => handleCopyMessage(message.id, message.content)}
+                              variant="ghost"
+                              size="sm"
+                              className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-70 hover:!opacity-100 transition-opacity"
+                            >
+                              {copiedMessageId === message.id ? (
+                                <Check className="h-3 w-3 text-green-600" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </Button>
+                          )}
                           <div className={`prose prose-sm max-w-none break-words ${message.type === "user" ? "text-white" : ""}`} style={{ overflowWrap: 'anywhere', wordWrap: 'break-word', wordBreak: 'break-word' }}>
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                           </div>
@@ -627,12 +661,16 @@ export default function TailorResumePage({ params }: TailorResumePageProps) {
                       disabled={isProcessing}
                       className="min-h-[40px] resize-none"
                     />
-                      <Button 
+                      <Button
                         type="button"
-                        onClick={handleSendMessage} 
+                        onClick={handleSendMessage}
                         disabled={isProcessing || !newMessage.trim() || !job}
                       >
-                        <Send className="h-4 w-4" />
+                        {isProcessing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
                       </Button>
                   </div>
                   ) : (

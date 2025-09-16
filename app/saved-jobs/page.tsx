@@ -90,6 +90,36 @@ function SavedJobsPageContent() {
     fetchSavedJobs()
   }, [user])
 
+  // Poll for scoring updates every 5 seconds if there are pending/in_progress jobs
+  useEffect(() => {
+    const hasPendingJobs = savedJobs.some(job =>
+      job.scoringStatus === 'pending' || job.scoringStatus === 'in_progress'
+    )
+
+    if (!hasPendingJobs || !user || !auth?.currentUser) {
+      return
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const token = await auth.currentUser!.getIdToken()
+        const response = await fetch("/api/saved-jobs", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setSavedJobs(data.savedJobs || [])
+        }
+      } catch (err) {
+        console.error("Error polling for job updates:", err)
+      }
+    }, 5000) // Poll every 5 seconds
+
+    return () => clearInterval(interval)
+  }, [savedJobs, user])
+
   const handleUnsaveJob = async (jobId: string) => {
     if (!user || !auth?.currentUser) return
     try {
@@ -328,13 +358,13 @@ function SavedJobsPageContent() {
       const res = await fetch('/api/jobs/parse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: newJobApplyUrl })
+        body: JSON.stringify({ url: newJobApplyUrl, debug: true })
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Unable to parse URL')
       }
-      const { job } = await res.json()
+      const { job, debug } = await res.json()
       if (job) {
         if (job.title) setNewJobTitle(job.title)
         if (job.company) setNewJobCompany(job.company)
@@ -342,12 +372,58 @@ function SavedJobsPageContent() {
         if (job.salary) setNewJobSalary(String(job.salary))
         if (job.description) setNewJobDescription(job.description)
         if (job.source) setNewJobSource(job.source)
-        setParseMessage('Parsed successfully. Review and edit if needed.')
+        const hasCoreFields = Boolean(job.title || job.company || job.location || job.description)
+        if (hasCoreFields) {
+          setParseMessage('Parsed successfully. Review and edit if needed.')
+        } else {
+          setParseMessage("We couldn't auto-fill because this site requires login or human verification. Please add the job manually.")
+          // Fire a best-effort notification so we can inspect logs
+          try {
+            await fetch('/api/notify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                subject: 'Job parse fallback: login/captcha likely required',
+                to: 'jsong@koreatous.com',
+                message: `Parse returned no fields for URL: ${newJobApplyUrl}. Likely requires login/captcha. Debug: ${debug ? JSON.stringify(debug).slice(0, 1000) : 'n/a'}`,
+              })
+            })
+          } catch (err) {
+            // Non-blocking
+            console.warn('Notify failed (non-blocking):', err)
+          }
+        }
       } else {
-        setParseMessage('No details found. You can fill manually.')
+        setParseMessage("We couldn't auto-fill because this site requires login or human verification. Please add the job manually.")
+        try {
+          await fetch('/api/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subject: 'Job parse failed: empty payload (login/captcha likely)',
+              to: 'jsong@koreatous.com',
+              message: `Parser returned empty job for URL: ${newJobApplyUrl}. Likely requires login/captcha.`,
+            })
+          })
+        } catch (err) {
+          console.warn('Notify failed (non-blocking):', err)
+        }
       }
     } catch (e: any) {
-      setParseMessage(e?.message || 'Failed to parse job URL')
+      setParseMessage("We couldn't auto-fill because this site requires login or human verification. Please add the job manually.")
+      try {
+        await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: 'Job parse error (login/captcha likely)',
+            to: 'jsong@koreatous.com',
+            message: `Error parsing URL ${newJobApplyUrl}: ${e?.message || 'Unknown error'}. Likely requires login/captcha.`,
+          })
+        })
+      } catch (err) {
+        console.warn('Notify failed (non-blocking):', err)
+      }
     } finally {
       setIsParsingJobUrl(false)
     }
@@ -552,13 +628,15 @@ function SavedJobsPageContent() {
 
         if (updateResponse.ok) {
           // Update local state with full scoring data
-          setSavedJobs((prev) => 
-            prev.map((savedJob) => 
-              savedJob.jobId === job.jobId 
-                ? { 
-                    ...savedJob, 
+          setSavedJobs((prev) =>
+            prev.map((savedJob) =>
+              savedJob.jobId === job.jobId
+                ? {
+                    ...savedJob,
                     matchingScore: scoredJob.matchingScore,
                     matchingSummary: scoredJob.matchingSummary,
+                    scoringStatus: 'completed' as const,
+                    scoringCompletedAt: new Date(),
                     originalData: {
                       ...(savedJob.originalData || {}),
                       matchingScore: scoredJob.matchingScore,
@@ -620,7 +698,21 @@ function SavedJobsPageContent() {
                       </Button>
                     </div>
                     {parseMessage && (
-                      <p className="text-xs text-muted-foreground">{parseMessage}</p>
+                      <p
+                        className={
+                          `text-xs ` + (
+                            parseMessage.toLowerCase().includes('manual') ||
+                            parseMessage.toLowerCase().includes("couldn't") ||
+                            parseMessage.toLowerCase().includes('cannot') ||
+                            parseMessage.toLowerCase().includes('failed') ||
+                            parseMessage.toLowerCase().includes('no details found')
+                              ? 'text-red-600 font-semibold'
+                              : 'text-muted-foreground'
+                          )
+                        }
+                      >
+                        {parseMessage}
+                      </p>
                     )}
                   </div>
 
@@ -921,14 +1013,61 @@ function SavedJobsPageContent() {
                         </TableCell>
                         <TableCell className="text-center px-3 py-2">
                           <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className={`font-bold ${getScoreColor(job.matchingScore ?? 0)}`}
-                              onClick={() => setSelectedJob(job)}
-                            >
-                              {job.matchingScore ?? "-"}%
-                            </Button>
+                            {job.scoringStatus === 'pending' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="font-bold text-gray-500 bg-gray-50 border-gray-200"
+                                disabled
+                              >
+                                Pending...
+                              </Button>
+                            ) : job.scoringStatus === 'in_progress' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="font-bold text-blue-600 bg-blue-50 border-blue-200"
+                                disabled
+                              >
+                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                Scoring...
+                              </Button>
+                            ) : job.scoringStatus === 'failed' ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="font-bold text-red-600 bg-red-50 border-red-200"
+                                onClick={() => handleRescoreJob(job)}
+                                disabled={rescoringJobId === job.jobId}
+                              >
+                                {rescoringJobId === job.jobId ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : null}
+                                Retry
+                              </Button>
+                            ) : job.scoringStatus === 'completed' || (job.matchingScore !== undefined && job.matchingScore > 0) ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={`font-bold ${getScoreColor(job.matchingScore ?? 0)}`}
+                                onClick={() => setSelectedJob(job)}
+                              >
+                                {job.matchingScore ?? "-"}%
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="font-bold text-gray-400 bg-gray-50 border-gray-200"
+                                onClick={() => handleRescoreJob(job)}
+                                disabled={rescoringJobId === job.jobId}
+                              >
+                                {rescoringJobId === job.jobId ? (
+                                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                ) : null}
+                                Score Job
+                              </Button>
+                            )}
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -936,7 +1075,7 @@ function SavedJobsPageContent() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleRescoreJob(job)}
-                                    disabled={rescoringJobId === job.jobId}
+                                    disabled={rescoringJobId === job.jobId || job.scoringStatus === 'in_progress'}
                                     className="p-1 h-auto"
                                   >
                                     {rescoringJobId === job.jobId ? (

@@ -656,7 +656,7 @@ export async function executeMultiAgentResumeTailoring(request: {
     
   } catch (error) {
     console.error('[MultiAgentTailoring] Error:', error)
-    
+
     // Fallback to legacy tailoring
     console.log('[MultiAgentTailoring] Falling back to legacy tailoring...')
     return await executeResumeTailoring({
@@ -666,6 +666,52 @@ export async function executeMultiAgentResumeTailoring(request: {
       jobDescription: request.jobDescription,
       userRequest: request.userRequest,
       mode: 'agent'
+    })
+  }
+}
+
+/**
+ * Execute streaming multi-agent resume tailoring
+ */
+export async function executeMultiAgentResumeTailoringStream(request: {
+  resume: string
+  jobDescription: string
+  scoringAnalysis?: any
+  userRequest: string
+}): Promise<ReadableStream<Uint8Array>> {
+  try {
+    console.log('[StreamingMultiAgentTailoring] Starting streaming multi-agent resume tailoring...')
+
+    const openRouterApiKey = process.env.OPENROUTER_API_KEY
+    if (!openRouterApiKey) {
+      throw new Error('Missing OpenRouter API key for streaming multi-agent tailoring')
+    }
+
+    // Import the streaming multi-agent tailoring function
+    const { calculateMultiAgentTailoringStream } = await import('./resume-tailoring-engine')
+
+    // Return the streaming response
+    return calculateMultiAgentTailoringStream(
+      request.resume,
+      request.jobDescription,
+      request.scoringAnalysis || {},
+      request.userRequest,
+      openRouterApiKey
+    )
+  } catch (error) {
+    console.error('[StreamingMultiAgentTailoring] Error creating stream:', error)
+
+    // Return error stream
+    return new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            type: 'error',
+            message: `❌ Failed to start streaming: ${error instanceof Error ? error.message : 'Unknown error'}`
+          })}\n\n`
+        ))
+        controller.close()
+      }
     })
   }
 }

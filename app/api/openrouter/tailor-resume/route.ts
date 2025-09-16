@@ -5,6 +5,9 @@ import { getAuth } from "firebase-admin/auth";
 import { executeResumeTailoring, executeMultiAgentResumeTailoring } from "@/lib/prompts/api-helpers";
 import { MODELS } from "@/lib/prompts/constants";
 
+// Configure route timeout - 5 minutes for complex multi-agent operations
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   const { 
     message, 
@@ -97,71 +100,9 @@ export async function POST(req: NextRequest) {
   try {
     const startTime = Date.now();
     
-    // Generate scoring analysis if not present (for better tailoring context)
+    // Skip job scoring for resume tailoring - scoring will be done when users save jobs or trigger manual analysis
+    console.log('[TailoringAPI] Skipping job scoring - focusing on resume tailoring only');
     let scoringContext = null;
-    if (mode === 'agent' && !scoringAnalysis && (jobDescription || (jobTitle && company))) {
-      console.log('[TailoringAPI] No scoring analysis found, generating for better tailoring context');
-      
-      try {
-        const { executeEnhancedJobScoring } = await import('@/lib/prompts/api-helpers');
-        
-        // Create a mock job object for scoring
-        const mockJob = {
-          id: 'temp-for-scoring',
-          title: jobTitle || 'Position',
-          company: company || 'Company',
-          location: '',
-          description: jobDescription || `Job Title: ${jobTitle}\nCompany: ${company}`,
-          url: '',
-          postedDate: '',
-          salary: '',
-          snippet: ''
-        };
-        
-        const scoringRequest = {
-          jobs: [mockJob],
-          resume: finalResume,
-          userId: 'temp-user'
-        };
-        
-        const contextScoringStart = Date.now()
-        const scoredJobs = await executeEnhancedJobScoring(scoringRequest);
-        const contextScoringTime = Date.now() - contextScoringStart
-        
-        if (scoredJobs.length > 0 && scoredJobs[0].enhancedScoreDetails) {
-          scoringContext = scoredJobs[0].enhancedScoreDetails;
-          console.log('[TailoringAPI] Generated scoring analysis for tailoring context');
-          
-          // Log activity for context scoring (if we have a real user)
-          if (userId !== 'anonymous') {
-            try {
-              await logActivity({
-                userId,
-                activityType: 'job_scoring',
-                tokenUsage: 600, // Enhanced scoring estimate
-                timeTaken: contextScoringTime / 1000,
-                metadata: {
-                  model: MODELS.GPT5_MINI,
-                  jobs_scored: 1,
-                  scoring_type: 'enhanced',
-                  triggered_by: 'resume_tailoring_context',
-                  job_title: jobTitle,
-                  job_company: company,
-                  execution_time_ms: contextScoringTime,
-                  estimated_tokens_per_job: 600,
-                  internal_scoring: true // This is for context, not direct user request
-                }
-              })
-              console.log('[TailoringAPI] Context scoring activity logged: 600 tokens')
-            } catch (activityError) {
-              console.warn('[TailoringAPI] Failed to log context scoring activity:', activityError)
-            }
-          }
-        }
-      } catch (scoringError) {
-        console.warn('[TailoringAPI] Failed to generate scoring analysis, proceeding without it:', scoringError);
-      }
-    }
     
     // Get user ID for cache optimization
     let userId = 'anonymous';
@@ -176,17 +117,45 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Always use legacy tailoring system for resumes (better results than multi-agent)
-    console.log('[TailoringAPI] Using legacy tailoring system with cache optimization');
-    const result = await executeResumeTailoring({
+    // Use Gemini AI single prompt system for fast, efficient tailoring
+    console.log('[TailoringAPI] Starting Gemini AI single prompt tailoring system');
+    console.log('[TailoringAPI] Resume length:', finalResume.length, 'characters');
+    console.log('[TailoringAPI] Job description length:', jobDescription.length, 'characters');
+
+    // Import Gemini client
+    // Ask mode: return direct answer instead of tailoring
+    if (mode === 'ask') {
+      const { generateQAAnswer } = await import('@/lib/gemini-client')
+      const answer = await generateQAAnswer({
+        resume: finalResume,
+        jobDescription,
+        userRequest: message,
+        jobTitle: jobTitle || 'Position',
+        company: company || 'Company',
+        history: (await req.json().catch(() => ({} as any)))?.history || []
+      })
+
+      return NextResponse.json({
+        success: true,
+        reply: answer.reply,
+        updatedResume: undefined,
+        keyChanges: [],
+        matchingScore: undefined,
+        usage: { totalTokens: Math.floor((finalResume.length + jobDescription.length) / 4) }
+      })
+    }
+
+    const { geminiClient } = await import('@/lib/gemini-client');
+
+    const result = await geminiClient.generateResumeTailoring({
       resume: finalResume,
-      jobTitle,
-      company,
-      jobDescription,
+      jobDescription: jobDescription,
       userRequest: message,
-      mode: mode as 'agent' | 'ask',
-      userId
+      jobTitle: jobTitle || 'Position',
+      company: company || 'Company'
     });
+
+    console.log('[TailoringAPI] Gemini AI tailoring completed successfully');
 
     const timeTaken = (Date.now() - startTime) / 1000;
     
@@ -235,15 +204,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Add metadata to response
+    // Map Gemini response to expected format
     const enhancedResult = {
-      ...result,
+      success: result.success,
+      updatedResume: result.tailoredResume,
+      reply: result.optimizationSummary,
+      keyChanges: result.keyChanges,
+      matchingScore: result.matchingScore,
+      // Metadata
       multiAgent: false,
       resumeLoadedFromDb: !resume && !!finalResume,
-      scoringGenerated: !scoringAnalysis && !!scoringContext,
-      tailoringMode: 'legacy',
-      cacheOptimized: true,
-      userId: userId !== 'anonymous' ? userId : undefined
+      scoringGenerated: false, // Job scoring skipped for performance
+      tailoringMode: 'gemini-single-prompt',
+      cacheOptimized: false,
+      userId: userId !== 'anonymous' ? userId : undefined,
+      usage: {
+        totalTokens: Math.floor(finalResume.length / 4 + jobDescription.length / 4), // Estimate
+        promptTokens: Math.floor((finalResume.length + jobDescription.length) / 4),
+        completionTokens: Math.floor((result.tailoredResume?.length || 0) / 4)
+      }
     };
 
     return NextResponse.json(enhancedResult);

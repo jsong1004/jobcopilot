@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio'
 import { parseLinkedIn } from './linkedin'
 import { parseIndeed } from './indeed'
 import { parseWellfound } from './wellfound'
+import { parseGrabJobs } from './grabjobs'
 import { parseGeneric } from './generic'
 
 export interface ParsedJob {
@@ -31,6 +32,9 @@ export async function parseFromUrl(url: string, htmlFetcher: (u: string) => Prom
   if (domain.includes('wellfound.com') || domain.includes('angel.co')) {
     return await parseWellfound(url, fetchHtml)
   }
+  if (domain.includes('grabjobs.com') || domain.includes('jobcopilot.com')) {
+    return await parseGrabJobs(url, fetchHtml)
+  }
 
   const html = await fetchHtml()
   return parseGeneric(url, html)
@@ -58,9 +62,22 @@ export function extractJsonLdJobPosting($: cheerio.CheerioAPI): any | null {
 export function cleanText(input?: string): string {
   if (!input) return ''
   return input
+    // Remove HTML tags first
+    .replace(/<[^>]*>/g, ' ')
+    // Handle HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    // Normalize whitespace and line breaks
     .replace(/\r\n|\r|\n/g, '\n')
     .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
     .replace(/\s+$/g, '')
+    .trim()
 }
 
 
