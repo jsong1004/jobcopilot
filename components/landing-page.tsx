@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +20,10 @@ import Link from "next/link"
 export function LandingPage() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup')
+
+  useEffect(() => {
+    // Component mounted successfully
+  }, [])
 
   const handleGetStarted = () => {
     setAuthMode('signup')
@@ -91,11 +95,20 @@ export function LandingPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Button size="lg" onClick={handleGetStarted} className="text-lg px-8 py-6">
+                <Button
+                  size="lg"
+                  onClick={handleGetStarted}
+                  className="text-lg px-8 py-6"
+                >
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleSignIn} className="text-lg px-8 py-6">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleSignIn}
+                  className="text-lg px-8 py-6"
+                >
                   Sign In
                 </Button>
               </div>
@@ -200,9 +213,9 @@ export function LandingPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  size="lg" 
-                  variant="secondary" 
+                <Button
+                  size="lg"
+                  variant="secondary"
                   onClick={handleGetStarted}
                   className="text-lg px-8 py-6"
                 >

@@ -99,6 +99,11 @@ MyJob is a comprehensive, AI-driven platform designed to revolutionize the job s
 - **[OpenRouter API](https://openrouter.ai/)** - GPT-4o-mini for matching, scoring, and content generation
 - **[SerpApi](https://serpapi.com/)** - Comprehensive job listing aggregation
 - **[The Companies API](https://thecompaniesapi.com/)** - Company information and metrics
+- **[Playwright](https://playwright.dev/)** - Free browser automation for job scraping (replaces expensive API services)
+  - Headless browser automation with Chrome, Firefox, Safari support
+  - Anti-detection features with stealth mode and user agent rotation
+  - Dynamic content rendering for JavaScript-heavy job sites
+  - Cost-effective alternative to paid scraping APIs ($0/month vs $99+/month)
 
 ### Document Processing
 - **[Puppeteer](https://pptr.dev/)** - PDF generation for resumes and reports
@@ -152,7 +157,7 @@ Configure your `.env.local` with:
 - OpenRouter API key for AI features
 - GitHub token for issue management
 - The Companies API token for company data
- - Optional: `JOB_PARSE_ENABLE_SERPAPI_FALLBACK=false` and `SERPAPI_KEY=...` for paid parse fallback
+- Note: ScrapFly API is no longer required (replaced with free Playwright automation)
 
 ### 3. Firebase Configuration
 

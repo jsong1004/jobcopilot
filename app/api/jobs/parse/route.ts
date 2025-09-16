@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { parseFromUrl } from '@/lib/job-parsers'
+import { JobScrapingService } from '@/lib/scraping/job-scraping-service'
 
 // Simple in-memory rate limiting (resets on server restart)
 const rateLimiter = new Map<string, { count: number; resetTime: number }>()
@@ -266,53 +267,42 @@ export async function POST(req: NextRequest) {
     debugInfo.domain = domain
     
     console.log(`[jobs/parse] Starting parse for ${domain}: ${url}`)
-    
-    // Custom fetch function that returns both HTML and debug info
-    const fetchHtmlWithDebug = async (u: string) => {
-      const result = await fetchHtml(u)
-      // Store fetch debug info
-      debugInfo.fetchDebug = result.debug
-      return result.html
-    }
-    
-    const parseStartTime = Date.now()
-    const parsed = await parseFromUrl(url, fetchHtmlWithDebug)
-    const parseEndTime = Date.now()
-    
-    debugInfo.parseTime = parseEndTime - parseStartTime
+
+    // Use the new enhanced scraping service
+    const scrapingService = new JobScrapingService()
+    const result = await scrapingService.scrapeJob(url, { debug: requestDebug })
+
+    // Merge debug information
+    debugInfo.scrapingDebug = result.debug
     debugInfo.parsedResult = {
-      hasTitle: !!parsed.title,
-      hasCompany: !!parsed.company,
-      hasLocation: !!parsed.location,
-      hasDescription: !!parsed.description,
-      descriptionLength: parsed.description?.length || 0,
-      hasSalary: !!parsed.salary,
-      hasPostedAt: !!parsed.postedAt,
-      source: parsed.source,
+      hasTitle: !!result.job.title,
+      hasCompany: !!result.job.company,
+      hasLocation: !!result.job.location,
+      hasDescription: !!result.job.description,
+      descriptionLength: result.job.description?.length || 0,
+      hasSalary: !!result.job.salary,
+      hasPostedAt: !!result.job.postedAt,
+      source: result.job.source,
     }
-    
+
     // Calculate success score
     const fields = ['title', 'company', 'location', 'description']
-    const filledFields = fields.filter(f => parsed[f as keyof typeof parsed])
+    const filledFields = fields.filter(f => result.job[f as keyof typeof result.job])
     debugInfo.successScore = `${filledFields.length}/${fields.length}`
     debugInfo.filledFields = filledFields
-    debugInfo.missingFields = fields.filter(f => !parsed[f as keyof typeof parsed])
-    
+    debugInfo.missingFields = fields.filter(f => !result.job[f as keyof typeof result.job])
+
     const totalTime = Date.now() - startTime
     debugInfo.totalTime = totalTime
-    debugInfo.success = true
-    
-    console.log(`[jobs/parse] Successfully parsed ${domain} (${debugInfo.successScore} fields, ${totalTime}ms)`)
-    
-    if (debugInfo.fetchDebug?.possibleBlock) {
-      console.warn(`[jobs/parse] Possible blocking detected for ${domain}:`, debugInfo.fetchDebug.blockKeywords)
-    }
-    
-    const response: any = { job: parsed }
+    debugInfo.success = result.debug.success
+
+    console.log(`[jobs/parse] Parse completed for ${domain} (${debugInfo.successScore} fields, ${totalTime}ms, service: ${result.debug.finalStrategy?.service || 'unknown'})`)
+
+    const response: any = { job: result.job }
     if (requestDebug) {
       response.debug = debugInfo
     }
-    
+
     return NextResponse.json(response)
   } catch (err: any) {
     const totalTime = Date.now() - startTime
@@ -329,7 +319,7 @@ export async function POST(req: NextRequest) {
       url: debugInfo.requestedUrl,
       domain: debugInfo.domain,
       error: err?.message,
-      fetchDebug: debugInfo.fetchDebug,
+      scrapingDebug: debugInfo.scrapingDebug,
       totalTime,
     })
     
