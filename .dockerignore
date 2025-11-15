@@ -1,0 +1,102 @@
+# .dockerignore - Optimize Docker build context
+# Exclude files that don't need to be in the Docker image
+
+# Dependencies (will be installed in container)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build artifacts (will be rebuilt in container)
+.next/
+.next/cache/
+dist/
+build/
+out/
+.turbo/
+
+# Development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Git
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs/
+DOCKER_*.md
+SEO_*.md
+CLEANUP_*.md
+INTERVIEW_*.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage/
+.nyc_output/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+*.spec.ts
+*.spec.tsx
+*.spec.js
+*.spec.jsx
+__tests__/
+test-results/
+playwright-report/
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Docker files (not needed in image, but keep Dockerfile accessible)
+Dockerfile.dev
+docker-compose*.yml
+
+# Cloud Build files (not needed in image)
+cloudbuild.yaml
+.gcloudignore
+deploy.sh
+
+# Firebase local files
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Service account keys (should use Secret Manager)
+*-key.json
+service-account*.json
+credentials.json
+
+# Misc
+.eslintcache
+.prettierignore
+*.tsbuildinfo

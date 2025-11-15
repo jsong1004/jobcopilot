@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const decoded = await adminAuth.verifyIdToken(token)
     const userId = decoded.uid
 
-    const { jobs, resume, enhanced = false, multiAgent = false } = await req.json()
+    const { jobs, resume, enhanced = false, multiAgent = true } = await req.json()
     
     if (!jobs || !Array.isArray(jobs) || jobs.length === 0) {
       return NextResponse.json({ error: "Jobs array is required" }, { status: 400 })
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Score the jobs using the appropriate scoring system
     let scoredJobs
     if (multiAgent) {
-      scoredJobs = await executeMultiAgentJobScoring({ jobs, resume, userId })
+      scoredJobs = await executeMultiAgentJobScoring({ jobs, resume, userId }, true) // useLangGraph = true
     } else if (enhanced) {
       scoredJobs = await executeEnhancedJobScoring({ jobs, resume, userId })
     } else {
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
       let model = MODELS.GPT5_MINI
       
       if (multiAgent) {
-        scoringType = 'multi-agent'
-        model = 'multi-agent-system'
+        scoringType = 'langgraph-optimized'
+        model = 'langgraph-4-agent-system'
       } else if (enhanced) {
         scoringType = 'enhanced'
       }
@@ -96,9 +96,11 @@ export async function POST(req: NextRequest) {
           user_initiated: true, // User clicked "Generate score match"
           ...(multiAgent && {
             summary_activity: true,
-            agent_count: 9, // 8 scoring agents + 1 orchestration
+            agent_count: 6, // 4 scoring agents + 2 parsers
+            scoring_system: 'LangGraph',
+            optimized_agents: 'Technical, Experience, Impact, Cultural',
             total_tokens_used: actualUsageData?.totalTokens || 0,
-            note: 'Individual agent activities logged separately'
+            note: 'LangGraph optimized system with shared context'
           }),
           ...(actualUsageData && !multiAgent && {
             prompt_tokens: actualUsageData.promptTokens,

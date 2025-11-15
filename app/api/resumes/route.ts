@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     if (contentType.includes('multipart/form-data')) {
       // Handle file upload
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file');
       name = formData.get('name') as string;
       makeDefault = formData.get('makeDefault') === 'true';
 
@@ -112,25 +112,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File and name are required' }, { status: 400 });
     }
 
-    // Validate file
-    const validation = validateFile(file);
-    if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
-    }
+    // Validate file (duck-typing for File-like object)
+    if (file && typeof file === 'object' && 'arrayBuffer' in file && 'name' in file && 'size' in file) {
+      const validation = validateFile(file as any);
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
 
-    // Parse file content
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const parseResult = await parseFile(buffer, file.name);
+      // Parse file content
+      const buffer = Buffer.from(await (file as any).arrayBuffer());
+      const parseResult = await parseFile(buffer, (file as any).name);
     
-    if (parseResult.error) {
-      return NextResponse.json({ error: parseResult.error }, { status: 400 });
-    }
+      if (parseResult.error) {
+        return NextResponse.json({ error: parseResult.error }, { status: 400 });
+      }
 
-    if (!parseResult.content.trim()) {
-      return NextResponse.json({ error: 'File appears to be empty or could not extract text' }, { status: 400 });
+      if (!parseResult.content.trim()) {
+        return NextResponse.json({ error: 'File appears to be empty or could not extract text' }, { status: 400 });
       }
 
       content = parseResult.content;
+    } else {
+      return NextResponse.json({ error: 'Invalid file provided' }, { status: 400 });
+    }
     } else if (contentType.includes('application/json')) {
       // Handle direct content save
       const body = await request.json();

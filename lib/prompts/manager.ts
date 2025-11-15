@@ -94,8 +94,8 @@ export class PromptManager {
 
       if (GLOBAL_CONFIG.enableLogging) {
         console.log(`Executing prompt: ${request.promptId}`)
-        console.log(`System Role: ${systemRole.substring(0, 100)}...`)
-        console.log(`User Content: ${userContent.substring(0, 200)}...`)
+        console.log(`System Role: ${systemRole ? systemRole.substring(0, 100) : 'undefined'}...`)
+        console.log(`User Content: ${userContent ? userContent.substring(0, 200) : 'undefined'}...`)
       }
 
       // Make API call with retries, including user context for cache optimization
@@ -420,7 +420,7 @@ export class PromptManager {
   } {
     const promptsByTag: Record<string, number> = {}
     
-    for (const prompt of this.prompts.values()) {
+    for (const prompt of Array.from(this.prompts.values())) {
       for (const tag of prompt.tags) {
         promptsByTag[tag] = (promptsByTag[tag] || 0) + 1
       }

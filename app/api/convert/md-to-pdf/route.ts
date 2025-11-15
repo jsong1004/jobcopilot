@@ -5,18 +5,24 @@ import { marked } from 'marked'
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
-    const file = formData.get('file') as File
-    
+    const file = formData.get('file')
+
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
 
-    if (!file.name.endsWith('.md')) {
+    // Validate file is File-like object (duck-typing)
+    if (!(file && typeof file === 'object' && 'text' in file && 'name' in file)) {
+      return NextResponse.json({ error: "Invalid file provided" }, { status: 400 })
+    }
+
+    const fileName = (file as any).name;
+    if (!fileName.endsWith('.md')) {
       return NextResponse.json({ error: "File must be a Markdown (.md) file" }, { status: 400 })
     }
 
     // Read the markdown content
-    let markdownContent = await file.text()
+    let markdownContent = await (file as any).text()
     // Detect and unwrap fenced markdown blocks, e.g.:
     // ```markdown\n...content...\n```
     // or ```\n...content...\n```
@@ -202,7 +208,7 @@ export async function POST(req: NextRequest) {
     await browser.close()
 
     // Create filename based on original file
-    const originalName = file.name.replace(/\.md$/, '')
+    const originalName = fileName.replace(/\.md$/, '')
     const pdfFileName = `${originalName}.pdf`
 
     // Return the PDF as a downloadable response

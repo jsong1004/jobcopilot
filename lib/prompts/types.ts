@@ -10,7 +10,9 @@ export interface PromptConfig {
   maxTokens?: number
   responseFormat?: ResponseFormat
   version: string
+  variables?: string[]
   tags: string[]
+  expectedOutput?: string
 }
 
 export interface JsonSchema {
@@ -23,7 +25,7 @@ export interface JsonSchema {
 }
 
 export interface ResponseFormat {
-  type: 'json' | 'text' | 'structured'
+  type: 'json' | 'text' | 'structured' | 'json_object'
   schema?: JsonSchema
   examples?: string[]
 }
@@ -66,6 +68,9 @@ export interface PromptResponse<T = any> {
     model: string
     temperature: number
     responseTime: number
+    promptId?: string
+    cached?: boolean
+    cacheHitRate?: string
   }
 }
 
@@ -97,7 +102,7 @@ export interface CoverLetterRequest {
 }
 
 // Import types from external APIs
-import { SerpApiJobResult } from '@/lib/api/serp-api-types'
+import { SerpApiJobResult } from '../api/serp-api-types'
 
 // Import types from existing application
 export interface JobSearchResult {
@@ -328,7 +333,7 @@ export interface AgentResults {
   }
   analysis: {
     strengths?: { result: StrengthsAgentResult; executedAt: string }
-    weaknesses?: { result: WeaknessAgentResult; executedAt: string }
+    weaknesses?: { result: WeaknessesAgentResult; executedAt: string }
   }
   executionMetadata: {
     totalExecutionTime: number

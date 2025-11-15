@@ -314,7 +314,7 @@ export function AdminActivities() {
                         <TableCell>{activity.activityType}</TableCell>
                         <TableCell>{formatDate(activity.timestamp)}</TableCell>
                         <TableCell className="text-right">{activity.tokenUsage}</TableCell>
-                        <TableCell className="text-right">{activity.timeTaken.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{activity.timeTaken?.toFixed(2) ?? 'N/A'}</TableCell>
                         <TableCell>
                           <pre className="text-xs bg-muted p-2 rounded-md overflow-x-auto max-w-xs">
                             {JSON.stringify(activity.metadata, null, 2)}

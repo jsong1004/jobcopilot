@@ -103,11 +103,12 @@ export async function POST(req: NextRequest) {
       const scoringStartTime = Date.now()
 
       if (useMultiAgent) {
+        // Always use LangGraph optimized system for background scoring
         scoredJobs = await executeMultiAgentJobScoring({
           jobs: [jobForScoring],
           resume,
           userId
-        })
+        }, true) // useLangGraph = true
       } else {
         scoredJobs = await executeEnhancedJobScoring({
           jobs: [jobForScoring],

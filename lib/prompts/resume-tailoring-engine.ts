@@ -197,7 +197,7 @@ export async function executeAllTailoringAgentsParallel(
     
     // Organize results by agent type
     const organizedResults: TailoringAgentResults = {
-      agents: {},
+      agents: {} as Record<TailoringAgentType, TailoringAgentResult>,
       executionMetadata: {
         totalExecutionTime,
         agentsExecuted: agentTypes.length,

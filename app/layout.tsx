@@ -5,12 +5,25 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/components/auth-provider'
 import { Footer } from '@/components/footer'
+import { StructuredData } from '@/components/structured-data'
+import {
+  generateMetadata as createSEOMetadata,
+  generateOrganizationSchema,
+  generateWebSiteSchema,
+  generateSoftwareAppSchema,
+  SEO_KEYWORDS
+} from '@/lib/seo'
 
-export const metadata: Metadata = {
-  title: 'AI Matching Scores, Resume Tailoring, and Application Tracking',
-  description: 'Analyze matching scores, tailor your resume to each job, and track applications — all in one place.',
-  generator: 'Next.js',
-}
+export const metadata: Metadata = createSEOMetadata({
+  title: 'JobCopilot - AI-Powered Job Search, Resume Tailoring & Application Tracking',
+  description: 'Transform your job search with AI-powered matching scores, intelligent resume tailoring, automated cover letters, and comprehensive application tracking. Land your dream job faster with JobCopilot.',
+  keywords: [
+    ...SEO_KEYWORDS.core,
+    ...SEO_KEYWORDS.features,
+    ...SEO_KEYWORDS.industry,
+  ],
+  canonicalUrl: '/',
+})
 
 export default function RootLayout({
   children,
@@ -19,6 +32,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <StructuredData
+          data={[
+            generateOrganizationSchema(),
+            generateWebSiteSchema(),
+            generateSoftwareAppSchema(),
+          ]}
+        />
+      </head>
       <body className={GeistSans.className}>
         <AuthProvider>
           <ThemeProvider

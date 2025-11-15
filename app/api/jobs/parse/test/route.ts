@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { JobScrapingService } from '@/lib/scraping/job-scraping-service'
 import { getDomainInfo } from '@/lib/scraping/config'
 
+// Force dynamic rendering to avoid build-time static analysis
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // Test URLs for different job sites
 const TEST_URLS = {
   linkedin: 'https://www.linkedin.com/jobs/view/3766565837',

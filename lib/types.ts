@@ -362,4 +362,73 @@ export interface SearchAnalytics {
   executionTime: number    // Search time in milliseconds
   timestamp: Timestamp
   userId?: string
-} 
+}
+
+// Interview preparation types
+export type InterviewType =
+  | 'interview_tips'           // General interview guidance (tips-only, no Q&A)
+  | 'recruiter_screen'         // HR/recruiter screening prep
+  | 'technical_assessment'     // Technical/coding challenges
+  | 'technical_behavioral'     // Mixed technical + behavioral questions
+  | 'team_culture_fit'         // Team dynamics and culture alignment
+
+export type InterviewQuestionType = 'technical' | 'behavioral' | 'company_fit' | 'resume_based'
+export type InterviewStatus = 'active' | 'completed'
+export type FeedbackRating = 'excellent' | 'good' | 'needs_improvement'
+
+// Interview feedback interface
+export interface InterviewFeedback {
+  rating: FeedbackRating
+  strengths: string[]
+  improvements: string[]
+  suggestedAnswer: string
+  score: number // 1-10
+}
+
+// Interview question interface
+export interface InterviewQuestion {
+  id: string
+  type: InterviewQuestionType
+  question: string
+  userAnswer?: string
+  feedback?: InterviewFeedback
+  askedAt: Timestamp
+  answeredAt?: Timestamp
+}
+
+// Interview chat message interface
+export interface InterviewChatMessage {
+  id: string
+  type: 'user' | 'ai'
+  content: string
+  timestamp: Timestamp
+  questionId?: string // Reference to question if this is a Q&A exchange
+}
+
+// Per-type conversation data interface
+export interface InterviewTypeConversation {
+  messages: InterviewChatMessage[]
+  questions: InterviewQuestion[]
+  tipsShown: boolean
+  lastAccessedAt?: Timestamp
+}
+
+// Interview session document interface
+export interface InterviewSession {
+  id: string
+  userId: string
+  jobId: string
+  jobTitle: string
+  company: string
+  jobDescription?: string
+  resume?: string
+  createdAt: Timestamp
+  updatedAt: Timestamp
+  status: InterviewStatus
+  currentType: InterviewType // Current interview preparation type being viewed
+  conversationsByType: {
+    [K in InterviewType]: InterviewTypeConversation
+  }
+  totalScore?: number // Average of all question scores across all types
+  completedAt?: Timestamp
+}

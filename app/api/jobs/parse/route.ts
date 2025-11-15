@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { parseFromUrl } from '@/lib/job-parsers'
 import { JobScrapingService } from '@/lib/scraping/job-scraping-service'
 
+// Force dynamic rendering to avoid build-time static analysis
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 // Simple in-memory rate limiting (resets on server restart)
 const rateLimiter = new Map<string, { count: number; resetTime: number }>()
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute

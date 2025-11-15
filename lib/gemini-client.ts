@@ -4,10 +4,19 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 const MODEL = 'gemini-2.5-flash-lite'
 
 export class GeminiClient {
-  private genAI: GoogleGenerativeAI
-  private model: any
+  private genAI: GoogleGenerativeAI | null = null
+  private model: any = null
 
   constructor() {
+    // Lazy initialization - don't validate API key until first use
+    // This prevents build-time failures during Next.js page data collection
+  }
+
+  private ensureInitialized() {
+    if (this.genAI && this.model) {
+      return // Already initialized
+    }
+
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY environment variable is required')
@@ -32,6 +41,8 @@ export class GeminiClient {
     jobTitle: string
     company: string
   }) {
+    this.ensureInitialized() // Initialize on first use
+
     const prompt = `You are an expert resume optimization specialist. Please tailor the provided resume for the specific job opportunity.
 
 **Job Information:**
@@ -122,6 +133,8 @@ Focus on creating a compelling, relevant resume that effectively showcases the c
     jobTitle: string
     company: string
   }) {
+    this.ensureInitialized() // Initialize on first use
+
     const prompt = `Analyze this job opportunity against the provided resume and provide a professional assessment.
 
 **Job Information:**
@@ -175,6 +188,40 @@ Please provide a comprehensive analysis in JSON format:
     } catch (error) {
       console.error('Gemini job analysis error:', error)
       throw new Error(`Gemini job analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  /**
+   * Generic text generation method for interview and other features
+   */
+  async generateText({
+    prompt,
+    model = MODEL,
+    temperature = 0.7,
+    maxOutputTokens = 2048
+  }: {
+    prompt: string
+    model?: string
+    temperature?: number
+    maxOutputTokens?: number
+  }): Promise<string> {
+    this.ensureInitialized() // Initialize on first use
+
+    try {
+      const targetModel = this.genAI!.getGenerativeModel({
+        model,
+        generationConfig: {
+          temperature,
+          maxOutputTokens
+        }
+      })
+
+      const result = await targetModel.generateContent(prompt)
+      const response = await result.response
+      return response.text()
+    } catch (error) {
+      console.error('Gemini generateText error:', error)
+      throw new Error(`Gemini text generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 }

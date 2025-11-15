@@ -63,7 +63,6 @@ export class ResponseParser {
         console.error('Failed to parse JSON response:', error)
         console.error('Content:', content)
       }
-      
       // Try aggressive repair for truncated responses
       try {
         const repaired = this.repairTruncatedJson(content)
@@ -73,8 +72,17 @@ export class ResponseParser {
       } catch (repairError) {
         // Repair failed, continue with original error
       }
-      
-      throw new Error(`Failed to parse JSON response: ${error}`)
+
+      // Last-resort: attempt loose extraction for known structures (skills, requirements)
+      const loose = this.tryLooseExtraction(content)
+      if (loose) {
+        console.warn('⚠️ Using loosely extracted JSON due to parse errors')
+        return loose
+      }
+
+      // Do not throw; return empty object to keep pipeline running
+      console.warn('⚠️ Returning empty JSON object due to parse errors')
+      return {}
     }
   }
 
@@ -128,8 +136,13 @@ export class ResponseParser {
    * - Close unclosed strings at the end
    */
   private static sanitizeJsonString(jsonLike: string): string {
+    // Normalize smart quotes to ASCII to avoid parse errors
+    let s = jsonLike
+      .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"') // double quotes
+      .replace(/[\u2018\u2019\u2032]/g, "'") // single quotes in content
+
     // Remove trailing commas before closing braces/brackets
-    let s = jsonLike.replace(/,\s*([}\]])/g, '$1')
+    s = s.replace(/,\s*([}\]])/g, '$1')
 
     // Replace unescaped newlines inside strings with \n via state machine
     let result = ''
@@ -237,6 +250,64 @@ export class ResponseParser {
     } catch {
       return null
     }
+  }
+
+  /**
+   * Best-effort extraction for expected shapes when JSON is malformed.
+   * Handles two formats:
+   * 1) Resume parser: { skills: string[], experience: string, education: string, achievements: string[] }
+   * 2) Job parser: { requiredSkills: string[], experienceLevel: string, responsibilities: string[], qualifications: string[] }
+   */
+  private static tryLooseExtraction(content: string): any | null {
+    const extractArray = (key: string): string[] | undefined => {
+      // Capture quoted strings following the key, even if ']' is missing
+      const keyIdx = content.indexOf(`"${key}"`)
+      if (keyIdx === -1) return undefined
+      const slice = content.slice(keyIdx)
+      const arrayStart = slice.indexOf('[')
+      if (arrayStart === -1) return undefined
+      // Take up to either the closing ']' or next key occurrence
+      const after = slice.slice(arrayStart + 1)
+      const closing = after.indexOf(']')
+      const nextKey = after.search(/\n\s*"[a-zA-Z_]+"\s*:/)
+      const end = closing !== -1 ? closing : (nextKey !== -1 ? nextKey : Math.min(after.length, 2000))
+      const segment = after.slice(0, end)
+      const matches = Array.from(segment.matchAll(/"([^"]+)"/g)).map(m => m[1].trim()).filter(Boolean)
+      return matches.length > 0 ? matches : undefined
+    }
+
+    const extractString = (key: string): string | undefined => {
+      const m = content.match(new RegExp(`"${key}"\s*:\s*"([\s\S]*?)"`))
+      return m?.[1]?.trim()
+    }
+
+    const result: any = {}
+    const skills = extractArray('skills')
+    const achievements = extractArray('achievements')
+    const requiredSkills = extractArray('requiredSkills')
+    const responsibilities = extractArray('responsibilities')
+    const qualifications = extractArray('qualifications')
+    const experience = extractString('experience')
+    const education = extractString('education')
+    const experienceLevel = extractString('experienceLevel')
+
+    if (skills || achievements || experience || education) {
+      if (skills) result.skills = skills
+      if (experience) result.experience = experience
+      if (education) result.education = education
+      if (achievements) result.achievements = achievements
+      return result
+    }
+
+    if (requiredSkills || responsibilities || qualifications || experienceLevel) {
+      if (requiredSkills) result.requiredSkills = requiredSkills
+      if (experienceLevel) result.experienceLevel = experienceLevel
+      if (responsibilities) result.responsibilities = responsibilities
+      if (qualifications) result.qualifications = qualifications
+      return result
+    }
+
+    return null
   }
 
   /**

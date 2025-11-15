@@ -59,38 +59,41 @@ export async function POST(req: NextRequest) {
       const bucket = storage.bucket(bucketName);
       
       for (const [key, file] of fileEntries) {
-        if (file instanceof File) {
-          const buffer = Buffer.from(await file.arrayBuffer());
+        // Type-check for File object safely (works in both build and runtime)
+        if (file && typeof file === 'object' && 'arrayBuffer' in file && 'name' in file && 'size' in file) {
+          const buffer = Buffer.from(await (file as any).arrayBuffer());
           const timestamp = Date.now();
-          const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const safeFilename = (file as any).name.replace(/[^a-zA-Z0-9.-]/g, '_');
           const storagePath = `feedback-attachments/${timestamp}_${safeFilename}`;
           
           // Upload to Firebase Storage
           const fileRef = bucket.file(storagePath);
           await fileRef.save(buffer, {
             metadata: {
-              contentType: file.type,
+              contentType: (file as any).type || 'application/octet-stream',
               customMetadata: {
-                originalName: file.name,
+                originalName: (file as any).name,
                 uploadedBy: user?.email || 'anonymous',
                 feedbackTitle: title
               }
             }
           });
-          
+
           // Make file publicly accessible
           await fileRef.makePublic();
           const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
-          
+
           // Parse file content for text files
-          const extension = file.name.toLowerCase().split('.').pop();
+          const fileName = (file as any).name;
+          const fileSize = (file as any).size;
+          const extension = fileName.toLowerCase().split('.').pop();
           const textExtensions = ['txt', 'md', 'markdown', 'pdf', 'docx'];
-          
+
           if (textExtensions.includes(extension || '')) {
-            const parsed = await parseFile(buffer, file.name);
+            const parsed = await parseFile(buffer, fileName);
             if (parsed.content) {
-              attachments.push(`**📎 ${file.name}**
-File Size: ${(file.size / 1024).toFixed(1)} KB
+              attachments.push(`**📎 ${fileName}**
+File Size: ${(fileSize / 1024).toFixed(1)} KB
 [Download Link](${publicUrl})
 
 Content:
@@ -99,16 +102,16 @@ ${parsed.content.slice(0, 2000)}${parsed.content.length > 2000 ? '...' : ''}
 \`\`\`
 `);
             } else {
-              attachments.push(`**📎 ${file.name}**
-File Size: ${(file.size / 1024).toFixed(1)} KB
+              attachments.push(`**📎 ${fileName}**
+File Size: ${(fileSize / 1024).toFixed(1)} KB
 [Download Link](${publicUrl})
 ${parsed.error ? `\nError: ${parsed.error}` : ''}
 `);
             }
           } else {
             // For images and other files, just show the link
-            attachments.push(`**📎 ${file.name}**
-File Size: ${(file.size / 1024).toFixed(1)} KB
+            attachments.push(`**📎 ${fileName}**
+File Size: ${(fileSize / 1024).toFixed(1)} KB
 [Download Link](${publicUrl})
 `);
           }

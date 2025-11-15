@@ -9,6 +9,7 @@ import { Header } from "@/components/header"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { auth } from "@/lib/firebase"
 import type { CoverLetter } from "@/lib/types"
+import { formatDateSafe, parseDateInput } from "@/lib/utils/date"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -156,13 +157,8 @@ ${coverLetter.content}`
     }
   }
 
-  const formatDate = (date: any) => {
-    // Handle Firestore Timestamp or Date objects
-    if (date?.toDate) {
-      return date.toDate().toLocaleDateString()
-    }
-    return new Date(date).toLocaleDateString()
-  }
+  const formatDate = (date: any) =>
+    formatDateSafe(date, undefined, "en-US", "N/A")
 
   const handleSort = (field: 'name' | 'jobTitle' | 'company' | 'createdAt') => {
     if (sortField === field) {
@@ -191,8 +187,8 @@ ${coverLetter.content}`
         bValue = b.company.toLowerCase()
         break
       case 'createdAt':
-        aValue = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt.seconds * 1000)
-        bValue = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt.seconds * 1000)
+        aValue = parseDateInput(a.createdAt)?.getTime() ?? 0
+        bValue = parseDateInput(b.createdAt)?.getTime() ?? 0
         break
       default:
         return 0

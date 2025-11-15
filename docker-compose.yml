@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Firebase public config (required at build time for Next.js client bundle)
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+    ports:
+      - "3000:3000"
+    environment:
+      # Set production mode
+      - NODE_ENV=production
+    env_file:
+      # All other environment variables are loaded from .env.local
+      # This avoids duplication and "variable is not set" warnings
+      - .env.local
+    volumes:
+      # Mount service account key for local development if it exists
+      - ./service-account-key.json:/app/service-account-key.json:ro
+    # Chromium/Puppeteer configuration for Docker
+    security_opt:
+      - seccomp:unconfined
+    shm_size: '2gb'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+

@@ -17,6 +17,7 @@ import { FileText, Upload, Star, Edit, Trash2, Plus, Calendar, Download, Loader2
 import { Header } from "@/components/header"
 import { AuthProvider, useAuth } from "@/components/auth-provider"
 import { Resume } from "@/lib/types"
+import { formatDateSafe, parseDateInput } from "@/lib/utils/date"
 import { auth } from "@/lib/firebase"
 import Link from "next/link"
 
@@ -270,12 +271,8 @@ function ResumesPageContent() {
     }
   }
 
-  const formatDate = (date: Date | string | any) => {
-    if (date && typeof date === 'object' && 'toDate' in date) {
-      return date.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    }
-    return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-  }
+  const formatDate = (date: Date | string | any) =>
+    formatDateSafe(date, { month: "short", day: "numeric", year: "numeric" }, "en-US", "N/A")
 
   const handleSort = (field: 'name' | 'jobTitle' | 'createdAt') => {
     if (sortField === field) {
@@ -309,8 +306,8 @@ function ResumesPageContent() {
         bValue = (b.jobTitle || '').toLowerCase()
         break
       case 'createdAt':
-        aValue = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt.seconds * 1000)
-        bValue = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt.seconds * 1000)
+        aValue = parseDateInput(a.createdAt)?.getTime() ?? 0
+        bValue = parseDateInput(b.createdAt)?.getTime() ?? 0
         break
       default:
         return 0

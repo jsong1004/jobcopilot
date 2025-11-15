@@ -1,3 +1,6 @@
+// Import build polyfills to handle browser-only APIs during build
+import './lib/build-polyfills.js';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -9,6 +12,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Removed standalone output mode as it requires complete build
+  skipTrailingSlashRedirect: true,
   webpack: (config, { isServer }) => {
     // Exclude pdf-parse test files from bundle
     if (isServer) {
@@ -17,7 +22,7 @@ const nextConfig = {
         'canvas': 'canvas',
       });
     }
-    
+
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,

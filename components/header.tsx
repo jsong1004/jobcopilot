@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
-import { User, FileText, Bookmark, LogOut, Settings, Github } from "lucide-react"
+import { User, FileText, Bookmark, LogOut, Settings, Github, MessageSquare } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { AuthModal } from "@/components/auth-modal"
 
@@ -32,7 +32,7 @@ export function Header() {
       await signOut()
       
       // Check if on protected route and redirect with clean page reload
-      const protectedRoutes = ['/profile', '/resumes', '/saved-jobs', '/cover-letters', '/my-activities', '/admin']
+      const protectedRoutes = ['/profile', '/resumes', '/saved-jobs', '/cover-letters', '/interview-prep', '/my-activities', '/admin']
       const currentPath = window.location.pathname
       const isOnProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route))
       
@@ -77,6 +77,9 @@ export function Header() {
                   </Link>
                   <Link href="/cover-letters" className="text-muted-foreground hover:text-foreground transition-colors">
                     My Cover Letters
+                  </Link>
+                  <Link href="/interview-prep" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Interview Prep
                   </Link>
                   {isAdmin && <Link href="/admin" className="text-primary font-semibold">Admin</Link>}
                 </>
@@ -137,7 +140,12 @@ export function Header() {
                         <span>My Cover Letters</span>
                       </Link>
                     </DropdownMenuItem>
-
+                    <DropdownMenuItem asChild>
+                      <Link href="/interview-prep" className="flex items-center">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Interview Prep</span>
+                      </Link>
+                    </DropdownMenuItem>
 
                     <DropdownMenuItem asChild>
                       <Link href="/my-activities" className="flex items-center">

@@ -1,0 +1,16 @@
+{
+  "name": "myJob - AI-Powered Job Search Platform",
+  "short_name": "myJob",
+  "description": "AI-powered job search platform with resume tailoring and interview preparation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -11,7 +11,11 @@ export async function POST(req: NextRequest) {
     // Launch puppeteer and generate PDF
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage', // Overcome limited resource problems in Docker
+      ]
     })
     
     const page = await browser.newPage()
@@ -45,34 +49,137 @@ export async function POST(req: NextRequest) {
 }
 
 function generateAnalysisHTML(analysisData: any) {
-  const { job, breakdown, enhancedScoreDetails } = analysisData
-  
+  const { job, enhancedScoreDetails } = analysisData
+
   // Helper function to get score color
   const getScoreColor = (score: number) => {
     if (score >= 90) return '#16a34a' // green-600
-    if (score >= 70) return '#ca8a04' // yellow-600
-    return '#dc2626' // red-600
+    if (score >= 80) return '#059669' // green-700
+    if (score >= 70) return '#D97706' // orange-600
+    if (score >= 60) return '#F59E0B' // yellow-500
+    if (score >= 45) return '#EF4444' // red-500
+    return '#DC2626' // red-600
   }
-  
-  // Helper function to extract strings from arrays
-  const extractStringArray = (data: any): string[] => {
-    if (!data) return []
-    if (Array.isArray(data)) {
-      return data.map(item => {
-        if (typeof item === 'string') return item
-        if (typeof item === 'object' && item !== null) {
-          if (item.weakness) return item.weakness
-          if (item.strength) return item.strength
-          if (item.skill) return item.skill
-          if (item.name) return item.name
-          if (item.description) return item.description
-          return JSON.stringify(item)
+
+  // Helper function to get score icon
+  const getScoreIcon = (score: number) => {
+    if (score >= 80) return '✅'
+    if (score >= 60) return '⚠️'
+    return '❌'
+  }
+
+  // Helper function to render markdown-like text as HTML
+  const renderMarkdown = (text: string) => {
+    if (!text) return ''
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/•/g, '•')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+  }
+
+  // Helper function to extract weaknesses with improvement plans
+  const extractWeaknesses = (gaps: any): Array<{weakness: string, impact: string, plan: {shortTerm: string, midTerm: string, longTerm: string}}> => {
+    if (!gaps) return []
+    if (Array.isArray(gaps)) {
+      return gaps.map(gap => {
+        if (typeof gap === 'object' && gap !== null) {
+          return {
+            weakness: gap.weakness || gap.description || 'Unknown weakness',
+            impact: gap.impact || 'Impact not specified',
+            plan: gap.improvementPlan || {
+              shortTerm: 'No short-term plan',
+              midTerm: 'No mid-term plan',
+              longTerm: 'No long-term plan'
+            }
+          }
         }
-        return String(item)
+        return {
+          weakness: String(gap),
+          impact: 'Impact not specified',
+          plan: { shortTerm: 'Develop skills', midTerm: 'Build experience', longTerm: 'Master competency' }
+        }
       })
     }
-    if (typeof data === 'string') return [data]
     return []
+  }
+
+  // 4-category mapping from enhanced breakdown
+  const categories = enhancedScoreDetails?.breakdown ? [
+    {
+      key: 'technicalSkills',
+      title: 'Technical Competency',
+      icon: '🛠️',
+      score: enhancedScoreDetails.breakdown.technicalSkills?.score || 0,
+      reasoning: enhancedScoreDetails.breakdown.technicalSkills?.reasoning || '',
+      strengths: enhancedScoreDetails.breakdown.technicalSkills?.strengths || [],
+      gaps: extractWeaknesses(enhancedScoreDetails.breakdown.technicalSkills?.gaps)
+    },
+    {
+      key: 'experienceDepth',
+      title: 'Experience & Growth',
+      icon: '💼',
+      score: enhancedScoreDetails.breakdown.experienceDepth?.score || 0,
+      reasoning: enhancedScoreDetails.breakdown.experienceDepth?.reasoning || '',
+      strengths: enhancedScoreDetails.breakdown.experienceDepth?.strengths || [],
+      gaps: extractWeaknesses(enhancedScoreDetails.breakdown.experienceDepth?.gaps)
+    },
+    {
+      key: 'achievements',
+      title: 'Impact & Achievements',
+      icon: '🏆',
+      score: enhancedScoreDetails.breakdown.achievements?.score || 0,
+      reasoning: enhancedScoreDetails.breakdown.achievements?.reasoning || '',
+      strengths: enhancedScoreDetails.breakdown.achievements?.strengths || [],
+      gaps: extractWeaknesses(enhancedScoreDetails.breakdown.achievements?.gaps)
+    },
+    {
+      key: 'education',
+      title: 'Cultural & Educational Fit',
+      icon: '🎓',
+      score: enhancedScoreDetails.breakdown.education?.score || 0,
+      reasoning: enhancedScoreDetails.breakdown.education?.reasoning || '',
+      strengths: enhancedScoreDetails.breakdown.education?.strengths || [],
+      gaps: extractWeaknesses(enhancedScoreDetails.breakdown.education?.gaps)
+    }
+  ] : []
+  
+  // Global insights arrays (fallback if per-category strengths/gaps are not present)
+  const asArray = (v: any) => Array.isArray(v) ? v : (v ? [v] : [])
+  const globalStrengths: string[] = asArray(enhancedScoreDetails?.keyStrengths).map((s: any) => typeof s === 'string' ? s : JSON.stringify(s))
+  const globalWeaknesses: any[] = asArray(enhancedScoreDetails?.keyWeaknesses)
+  
+  const renderWeaknessItem = (w: any) => {
+    try {
+      const obj = typeof w === 'string' ? JSON.parse(w) : w
+      const title = obj?.weakness || obj?.description || (typeof w === 'string' ? w : JSON.stringify(w))
+      const impact = obj?.impact
+      const plan = obj?.improvementPlan || obj?.plan || {}
+      return `
+        <div class="breakdown-item">
+          <div class="breakdown-header">
+            <span class="breakdown-title">${title}</span>
+          </div>
+          ${impact ? `<div class=\"breakdown-reasoning\"><strong>Impact:</strong> ${impact}</div>` : ''}
+          ${(plan.shortTerm || plan.midTerm || plan.longTerm) ? `
+            <div class=\"breakdown-reasoning\" style=\"margin-top:6px;\">
+              ${plan.shortTerm ? `<div><strong>Short term:</strong> ${plan.shortTerm}</div>` : ''}
+              ${plan.midTerm ? `<div><strong>Mid term:</strong> ${plan.midTerm}</div>` : ''}
+              ${plan.longTerm ? `<div><strong>Long term:</strong> ${plan.longTerm}</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `
+    } catch {
+      return `
+        <div class="breakdown-item">
+          <div class="breakdown-header">
+            <span class="breakdown-title">${typeof w === 'string' ? w : JSON.stringify(w)}</span>
+          </div>
+        </div>
+      `
+    }
   }
   
   return `
@@ -114,118 +221,114 @@ function generateAnalysisHTML(analysisData: any) {
           color: #2563eb;
           margin: 20px 0;
         }
-        .score-section {
-          margin: 20px 0;
-          padding: 15px;
+        .category-section {
+          margin: 25px 0;
+          padding: 20px;
           border: 1px solid #e2e8f0;
           border-radius: 8px;
+          break-inside: avoid;
         }
-        .score-header {
+        .category-header {
           display: flex;
-          justify-content: between;
+          justify-content: space-between;
           align-items: center;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
         }
-        .score-title {
-          font-size: 16px;
+        .category-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 18px;
           font-weight: 600;
-          margin-right: 10px;
         }
-        .score-value {
+        .category-icon {
+          font-size: 20px;
+        }
+        .score-badge {
+          display: flex;
+          align-items: center;
+          gap: 5px;
           font-weight: bold;
-          font-size: 14px;
+          font-size: 16px;
         }
         .progress-bar {
           height: 8px;
           background: #e2e8f0;
           border-radius: 4px;
-          margin: 10px 0;
+          margin: 15px 0;
           overflow: hidden;
         }
         .progress-fill {
           height: 100%;
-          background: #2563eb;
           transition: width 0.3s ease;
         }
-        .skills-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-          margin-top: 10px;
+        .reasoning-section {
+          background: #f8fafc;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 15px 0;
+          font-size: 14px;
+          line-height: 1.5;
         }
-        .skill-item {
-          display: inline-block;
-          background: #f1f5f9;
-          padding: 4px 8px;
-          margin: 2px;
-          border-radius: 4px;
-          font-size: 12px;
+        .strengths-section, .gaps-section {
+          margin: 15px 0;
         }
-        .skill-matched {
-          background: #dcfce7;
-          color: #166534;
+        .section-title {
+          font-weight: 600;
+          margin-bottom: 8px;
+          font-size: 14px;
         }
-        .skill-missing {
+        .strength-item, .gap-item {
+          margin-bottom: 6px;
+          padding: 6px 0;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 13px;
+        }
+        .gap-item {
           background: #fef3c7;
-          color: #92400e;
-        }
-        .experience-details {
-          background: #f8fafc;
-          padding: 15px;
-          border-radius: 6px;
-          margin-top: 10px;
-        }
-        .experience-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 8px;
-        }
-        .summary-section {
-          background: #dbeafe;
-          padding: 15px;
-          border-radius: 8px;
-          margin: 20px 0;
-        }
-        .insights-section {
-          margin: 20px 0;
-        }
-        .insight-item {
-          display: flex;
-          align-items: flex-start;
-          margin-bottom: 8px;
-        }
-        .insight-bullet {
-          width: 6px;
-          height: 6px;
-          background: #2563eb;
-          border-radius: 50%;
-          margin-right: 10px;
-          margin-top: 8px;
-          flex-shrink: 0;
-        }
-        .breakdown-item {
-          background: #f8fafc;
-          padding: 12px;
-          border-radius: 6px;
+          padding: 10px;
+          border-radius: 4px;
           margin-bottom: 10px;
+          border-bottom: none;
         }
-        .breakdown-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 5px;
+        .gap-weakness {
+          font-weight: 600;
+          color: #92400e;
+          margin-bottom: 4px;
         }
-        .breakdown-title {
-          font-weight: 500;
-          text-transform: capitalize;
+        .gap-impact {
+          color: #78716c;
+          font-style: italic;
+          margin-bottom: 8px;
         }
-        .breakdown-reasoning {
+        .improvement-plan {
+          background: #fff;
+          padding: 8px;
+          border-radius: 4px;
+          border-left: 3px solid #f59e0b;
+        }
+        .plan-item {
+          margin-bottom: 4px;
           font-size: 12px;
-          color: #64748b;
-          margin-top: 5px;
+        }
+        .plan-label {
+          font-weight: 600;
+          color: #92400e;
         }
         .page-break {
           page-break-before: always;
+        }
+        .summary-section {
+          background: #dbeafe;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 30px 0;
+        }
+        strong {
+          font-weight: 600;
+        }
+        em {
+          font-style: italic;
         }
       </style>
     </head>
@@ -237,174 +340,108 @@ function generateAnalysisHTML(analysisData: any) {
         <div>Overall Match Score</div>
       </div>
 
-      <!-- Skills Analysis -->
-      <div class="score-section">
-        <div class="score-header">
-          <span class="score-title">Skills Match</span>
-          <span class="score-value" style="color: ${getScoreColor(breakdown.skills.score)}">${breakdown.skills.score}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${breakdown.skills.score}%"></div>
-        </div>
-        <div class="skills-grid">
-          <div>
-            <strong>Matched Skills:</strong><br>
-            ${breakdown.skills.matched.map((skill: string) => `<span class="skill-item skill-matched">${skill}</span>`).join(' ')}
+      ${categories.map(category => `
+        <div class="category-section">
+          <div class="category-header">
+            <div class="category-title">
+              <span class="category-icon">${category.icon}</span>
+              <span>${category.title}</span>
+            </div>
+            <div class="score-badge" style="color: ${getScoreColor(category.score)}">
+              <span>${getScoreIcon(category.score)}</span>
+              <span>${category.score}%</span>
+            </div>
           </div>
-          <div>
-            <strong>Missing Skills:</strong><br>
-            ${breakdown.skills.missing.map((skill: string) => `<span class="skill-item skill-missing">${skill}</span>`).join(' ')}
-          </div>
-        </div>
-      </div>
 
-      <!-- Experience Analysis -->
-      <div class="score-section">
-        <div class="score-header">
-          <span class="score-title">Experience Match</span>
-          <span class="score-value" style="color: ${getScoreColor(breakdown.experience.score)}">${breakdown.experience.score}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${breakdown.experience.score}%"></div>
-        </div>
-        <div class="experience-details">
-          <div class="experience-row">
-            <span>Required Experience:</span>
-            <span>${breakdown.experience.yearsRequired} years</span>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${category.score}%; background: ${getScoreColor(category.score)}"></div>
           </div>
-          <div class="experience-row">
-            <span>Your Experience:</span>
-            <span>${breakdown.experience.yearsHave} years</span>
-          </div>
-          <div>
-            <strong>Relevant Areas:</strong><br>
-            ${breakdown.experience.relevantExperience}
-          </div>
-        </div>
-      </div>
 
-      <!-- Education Analysis -->
-      <div class="score-section">
-        <div class="score-header">
-          <span class="score-title">Education Match</span>
-          <span class="score-value" style="color: ${getScoreColor(breakdown.education.score)}">${breakdown.education.score}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${breakdown.education.score}%"></div>
-        </div>
-        <div class="experience-details">
-          <div>
-            <strong>Required:</strong><br>
-            ${breakdown.education.required}
-          </div>
-          <div style="margin-top: 10px;">
-            <strong>Your Education:</strong><br>
-            ${breakdown.education.have}
-          </div>
-        </div>
-      </div>
-
-      <!-- Keywords Analysis -->
-      <div class="score-section">
-        <div class="score-header">
-          <span class="score-title">Keywords Match</span>
-          <span class="score-value" style="color: ${getScoreColor(breakdown.keywords.score)}">${breakdown.keywords.score}%</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: ${breakdown.keywords.score}%"></div>
-        </div>
-        <div style="margin-top: 10px;">
-          <strong>Matched ${breakdown.keywords.matched.length} of ${breakdown.keywords.total} key terms:</strong><br>
-          ${breakdown.keywords.matched.length > 0 ? `
-            <div style="margin: 10px 0;">
-              <strong style="color: #166534;">✓ Key Strengths:</strong><br>
-              ${breakdown.keywords.matched.map((keyword: string) => `<span class="skill-item skill-matched">✓ ${keyword}</span>`).join(' ')}
+          ${category.reasoning ? `
+            <div class="reasoning-section">
+              <div>${renderMarkdown(category.reasoning)}</div>
             </div>
           ` : ''}
-          ${breakdown.skills.missing.length > 0 ? `
-            <div style="margin: 10px 0;">
-              <strong style="color: #92400e;">✗ Areas for Improvement:</strong><br>
-              ${breakdown.skills.missing.map((keyword: string) => `<span class="skill-item skill-missing">✗ ${keyword}</span>`).join(' ')}
+
+          ${category.strengths && category.strengths.length > 0 ? `
+            <div class="strengths-section">
+              <div class="section-title" style="color: #166534;">✅ Key Strengths</div>
+              ${category.strengths.map((strength: string) => `
+                <div class="strength-item">• ${strength}</div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          ${category.gaps && category.gaps.length > 0 ? `
+            <div class="gaps-section">
+              <div class="section-title" style="color: #92400e;">⚠️ Areas for Improvement</div>
+              ${category.gaps.map((gap: any) => `
+                <div class="gap-item">
+                  <div class="gap-weakness">${gap.weakness}</div>
+                  <div class="gap-impact">Impact: ${gap.impact}</div>
+                  <div class="improvement-plan">
+                    <div class="plan-item"><span class="plan-label">Short-term (1 month):</span> ${gap.plan.shortTerm}</div>
+                    <div class="plan-item"><span class="plan-label">Mid-term (3 months):</span> ${gap.plan.midTerm}</div>
+                    <div class="plan-item"><span class="plan-label">Long-term (6+ months):</span> ${gap.plan.longTerm}</div>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           ` : ''}
         </div>
-      </div>
+      `).join('')}
 
-      ${job.matchingSummary ? `
+      ${(globalStrengths.length > 0 || globalWeaknesses.length > 0) ? `
+        <div class="page-break">
+          <h2>AI Insights</h2>
+          ${globalStrengths.length > 0 ? `
+            <div class="insights-section">
+              <h3 style="color: #166534;">Key Strengths</h3>
+              ${globalStrengths.map((s: string) => `
+                <div class="insight-item">
+                  <div class="insight-bullet" style="background: #16a34a;"></div>
+                  <span>${s}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${globalWeaknesses.length > 0 ? `
+            <div class="insights-section">
+              <h3 style="color: #ca8a04;">Areas to Improve</h3>
+              ${globalWeaknesses.map(renderWeaknessItem).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+
+      ${enhancedScoreDetails?.hiringRecommendation ? `
         <div class="summary-section">
-          <h3 style="margin-top: 0;">Match Analysis Summary</h3>
-          <p><strong>Hiring Recommendation:</strong><br>
-          ${job.matchingScore >= 70 && job.matchingSummary.includes("Do Not Proceed") 
-            ? `Standard Interview Process - Overall score: ${job.matchingScore}% (Good Match)`
-            : job.matchingSummary}</p>
-          <div style="margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 6px;">
-            <strong>Match Category:</strong> 
-            ${job.matchingScore >= 90 ? 'Exceptional Match' :
-              job.matchingScore >= 80 ? 'Strong Candidate' :
-              job.matchingScore >= 70 ? 'Good Potential' :
-              job.matchingScore >= 60 ? 'Fair Match' :
-              job.matchingScore >= 45 ? 'Weak Match' : 'Poor Match'}
+          <h3 style="margin-top: 0; color: #2563eb;">Hiring Recommendation</h3>
+          <p><strong>Overall Assessment:</strong></p>
+          <p>${enhancedScoreDetails.hiringRecommendation}</p>
+
+          <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 6px;">
+            <strong>Match Category:</strong>
+            ${job.matchingScore >= 90 ? '🌟 Exceptional Match - Fast Track to Final Round' :
+              job.matchingScore >= 80 ? '🎯 Strong Candidate - Proceed to Technical Interview' :
+              job.matchingScore >= 70 ? '👍 Good Potential - Standard Interview Process' :
+              job.matchingScore >= 60 ? '🤔 Fair Match - Phone Screen First' :
+              job.matchingScore >= 45 ? '⚠️ Weak Match - Consider for Junior/Alternative Roles' : '❌ Poor Match - Do Not Proceed'}
           </div>
         </div>
       ` : ''}
 
-      ${enhancedScoreDetails ? `
+      ${enhancedScoreDetails?.interviewFocus && enhancedScoreDetails.interviewFocus.length > 0 ? `
         <div class="page-break">
-          <h2>AI Analysis Insights</h2>
-          
-          ${extractStringArray(enhancedScoreDetails.keyStrengths).length > 0 ? `
-            <div class="insights-section">
-              <h3 style="color: #166534;">Key Strengths</h3>
-              ${extractStringArray(enhancedScoreDetails.keyStrengths).map((strength: string) => `
-                <div class="insight-item">
-                  <div class="insight-bullet" style="background: #16a34a;"></div>
-                  <span>${strength}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-
-          ${extractStringArray(enhancedScoreDetails.keyWeaknesses).length > 0 ? `
-            <div class="insights-section">
-              <h3 style="color: #ca8a04;">Areas for Improvement</h3>
-              ${extractStringArray(enhancedScoreDetails.keyWeaknesses).map((weakness: string) => `
-                <div class="insight-item">
-                  <div class="insight-bullet" style="background: #ca8a04;"></div>
-                  <span>${weakness}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-
-          ${enhancedScoreDetails.breakdown ? `
-            <div class="insights-section">
-              <h3>Detailed Score Breakdown</h3>
-              ${Object.entries(enhancedScoreDetails.breakdown).map(([category, details]: [string, any]) => `
-                <div class="breakdown-item">
-                  <div class="breakdown-header">
-                    <span class="breakdown-title">${category.replace(/([A-Z])/g, ' $1').trim()}</span>
-                    <span style="color: ${getScoreColor(details.score)}; font-weight: bold;">${details.score}%</span>
-                  </div>
-                  <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${details.score}%"></div>
-                  </div>
-                  ${details.reasoning ? `<div class="breakdown-reasoning">${details.reasoning}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
-
-          ${extractStringArray(enhancedScoreDetails.interviewFocus).length > 0 ? `
-            <div class="insights-section">
-              <h3 style="color: #2563eb;">Interview Focus Areas</h3>
-              ${extractStringArray(enhancedScoreDetails.interviewFocus).map((focus: string) => `
-                <div class="insight-item">
-                  <div class="insight-bullet"></div>
-                  <span>${focus}</span>
-                </div>
-              `).join('')}
-            </div>
-          ` : ''}
+          <h3 style="color: #2563eb; margin-bottom: 15px;">🎯 Interview Focus Areas</h3>
+          <div style="background: #f0f9ff; padding: 15px; border-radius: 8px;">
+            ${enhancedScoreDetails.interviewFocus.map((focus: string) => `
+              <div style="margin-bottom: 8px; display: flex; align-items: flex-start;">
+                <span style="color: #2563eb; margin-right: 8px;">•</span>
+                <span>${focus}</span>
+              </div>
+            `).join('')}
+          </div>
         </div>
       ` : ''}
     </body>

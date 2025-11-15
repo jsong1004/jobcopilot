@@ -1,0 +1,151 @@
+# .gcloudignore - Optimize Cloud Build source upload
+# More aggressive than .dockerignore to minimize upload time
+
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore.
+
+# Include .dockerignore patterns
+#!include:.dockerignore
+
+# Dependencies (will be installed during build)
+node_modules/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build artifacts (will be rebuilt)
+.next/
+.next/cache/**
+.next/static/
+dist/
+build/
+out/
+.turbo/
+
+# Development environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+.env.example
+
+# Git and GitHub
+.git/
+.github/
+.gitignore
+.gitattributes
+.gitmodules
+
+# Comprehensive documentation (not needed for build)
+*.md
+!README.md
+docs/
+DOCKER_README.md
+DOCKER_DEPLOYMENT.md
+DOCKER_COMPOSE_QUICK_START.md
+DOCKER_FIXES_APPLIED.md
+DOCKER_SUCCESS_SUMMARY.md
+SEO_CHECKLIST.md
+SEO_IMPLEMENTATION.md
+SEO_OPTIMIZATION_SUMMARY.md
+CLEANUP_SUMMARY.md
+INTERVIEW_PREP_FEATURE.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# Testing
+coverage/
+.nyc_output/
+*.test.ts
+*.test.tsx
+*.test.js
+*.test.jsx
+*.spec.ts
+*.spec.tsx
+*.spec.js
+*.spec.jsx
+__tests__/
+test-results/
+playwright-report/
+.playwright/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+.cache/
+
+# Docker files
+Dockerfile.dev
+docker-compose*.yml
+.dockerignore
+
+# Firebase local
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug-log
+database-debug.log
+
+# Service account keys (CRITICAL - never upload)
+*-key.json
+service-account*.json
+credentials.json
+ServiceAccountKey.json
+
+# Misc development files
+.eslintcache
+.prettierignore
+*.tsbuildinfo
+.editorconfig
+.nvmrc
+
+# Build tools config (if not needed)
+.eslintrc*
+.prettierrc*
+.babelrc*
+tsconfig.tsbuildinfo
+
+# Large files that aren't needed
+*.pdf
+!public/**/*.pdf
+docs/**/*.pdf
+
+# Generated files
+.next/trace
+.next/server/pages-manifest.json
+.next/build-manifest.json
+
+# Deployment scripts (already in repo)
+deploy.sh

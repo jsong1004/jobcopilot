@@ -273,10 +273,17 @@ export async function parseFile(buffer: Buffer, filename: string): Promise<Parse
   }
 }
 
+// File-like interface that works in both browser and Node.js build contexts
+interface FileValidator {
+  size: number;
+  name: string;
+  type?: string;
+}
+
 /**
  * Validate file size and type
  */
-export function validateFile(file: File): { valid: boolean; error?: string } {
+export function validateFile(file: FileValidator): { valid: boolean; error?: string } {
   // Check file size (max 10MB)
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
@@ -289,7 +296,7 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
   // Check file extension
   const extension = file.name.toLowerCase().split('.').pop();
   const allowedExtensions = ['pdf', 'docx', 'md', 'markdown', 'txt'];
-  
+
   if (!extension || !allowedExtensions.includes(extension)) {
     return {
       valid: false,

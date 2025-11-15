@@ -1,10 +1,29 @@
-# MyJob: AI-Powered Job Search Platform
+# MyJob: AI-Powered Job Search Platform with Multi-Agent Resume Optimization
 
-[![Version](https://img.shields.io/badge/version-2.7.0-blue)](https://github.com/jsong1004/myjob)
+> **Next.js 15 • Firebase • OpenRouter AI • Multi-Agent System • Real-Time Streaming • Docker Ready**
+
+[![Version](https://img.shields.io/badge/version-2.8.0-blue)](https://github.com/jsong1004/myjob)
 [![Last Updated](https://img.shields.io/badge/last%20updated-December%202025-green)](https://github.com/jsong1004/myjob)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen)](DOCKER_README.md)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
 
-MyJob is a comprehensive, AI-driven platform designed to revolutionize the job search process. Built with cutting-edge technology, it provides intelligent job matching, AI-powered resume optimization, cover letter generation, and comprehensive application tracking for modern job seekers.
+**MyJob** is a comprehensive, AI-driven platform revolutionizing the job search process with **8 specialized AI agents** for parallel resume optimization, intelligent job matching, AI-powered interview preparation, and real-time application tracking. Built with Next.js 15 App Router, Firebase, and Google Gemini AI.
+
+**Keywords**: AI resume optimizer, job search automation, resume tailoring AI, cover letter generator, ATS optimization, AI interview coach, interview practice platform, Next.js job platform, Firebase authentication, multi-agent AI system, parallel AI processing, resume builder, job application tracker
+
+**Perfect For**: Job seekers, career changers, resume optimization, technical interview prep, behavioral interview practice, recruiter screening preparation, ATS systems, recruiters, job search automation, career development
+
+---
+
+## 🚀 Quick Links
+
+- **[📦 Docker Setup Guide](DOCKER_README.md)** - Complete containerization with Chromium/Puppeteer
+- **[📚 Project Documentation](docs/PROJECT_INDEX.md)** - Comprehensive technical docs
+- **[🔌 API Reference](docs/API_REFERENCE.md)** - 30 API endpoints documentation
+- **[🧩 Component Guide](docs/COMPONENT_GUIDE.md)** - 60+ React components
+
+---
 
 ## ✨ Core Features
 
@@ -57,6 +76,25 @@ MyJob is a comprehensive, AI-driven platform designed to revolutionize the job s
 - **Job Match Analysis PDFs:** Downloadable detailed scoring reports with visual breakdowns
 - **File Attachment Support:** Upload images and documents for feedback submissions
 
+### 🎤 AI-Powered Interview Preparation
+- **5 Specialized Interview Types:** Comprehensive practice for every interview stage
+  - Interview Tips & Guidance - General preparation strategies
+  - Recruiter Screening - HR and initial phone screen practice
+  - Technical Assessment - Coding challenges and problem-solving
+  - Technical & Behavioral - Combined technical + STAR method questions
+  - Team & Culture Fit - Collaboration and values alignment
+- **Type-Specific Tips:** Each interview type provides unique, specialized preparation guidance
+  - Recruiter Screening: Salary negotiation, background verification, timeline management
+  - Technical Assessment: Problem-solving frameworks, algorithm strategies, live coding tips
+  - Technical & Behavioral: Technical STAR method, leadership examples, impact storytelling
+  - Team & Culture Fit: Conflict resolution, DEI contributions, cultural awareness
+- **Interactive Practice Sessions:** Real-time Q&A with AI-powered feedback
+  - Question generation tailored to job description and resume
+  - Answer analysis with strengths, improvements, and suggested responses
+  - Rating system (1-10 score) with constructive feedback
+- **Auto-Display Tips:** Immediate access to relevant tips when switching interview types
+- **Session Management:** Track progress across all interview types with separate conversation histories
+
 ### 🔐 Secure Authentication & Admin
 - **Multi-Provider Auth:** Email/password and Google OAuth with Firebase Authentication
 - **Admin Dashboard:** Comprehensive user management, GitHub issue tracking, and system monitoring
@@ -90,10 +128,30 @@ MyJob is a comprehensive, AI-driven platform designed to revolutionize the job s
 - **Performance:** 30-60 second completion vs. 4+ minute timeouts
 
 ### Centralized Prompt Management
-- **Comprehensive Prompt Library:** 40+ prompts for job matching, resume processing, cover letter generation
+- **Comprehensive Prompt Library:** 40+ prompts for job matching, resume processing, cover letter generation, interview preparation
 - **PromptManager System:** Caching, retry logic, error handling, usage statistics
 - **Multiple Variants:** Professional, Creative, Technical, Entry-Level templates
 - **Streaming Support:** Real-time content delivery with SSE
+
+### Intelligent Interview Preparation System
+- **Type-Specific Prompt Engineering:** 5 specialized prompt functions for each interview stage
+  - General Interview Tips: 8-section comprehensive preparation guide
+  - Recruiter Screening: 10-section HR screening strategy with salary negotiation
+  - Technical Assessment: 12-section coding interview framework with problem-solving approach
+  - Technical & Behavioral: Hybrid STAR method combining technical depth and soft skills
+  - Team & Culture Fit: 11-section guide for cultural alignment and collaboration
+- **Adaptive Question Generation:** Context-aware questions based on:
+  - Job description requirements and company culture
+  - Candidate's resume and experience level
+  - Interview type and assessment goals
+  - Previous questions to avoid repetition
+- **AI-Powered Answer Analysis:** Structured feedback system providing:
+  - Overall rating (excellent, good, needs improvement)
+  - Numerical score (1-10 scale)
+  - Specific strengths identified in the answer
+  - Actionable improvement suggestions
+  - Suggested enhanced answer incorporating feedback
+- **Session Intelligence:** Separate conversation tracking per interview type with persistent state
 
 ### Enhanced Loading Experiences
 - **Educational Content:** Rotating tips and insights during processing
@@ -231,6 +289,8 @@ myjob/
 │   │   ├── resume/               # Streaming resume APIs (SSE)
 │   │   │   └── tailor-stream/    # Real-time multi-agent tailoring
 │   │   ├── cover-letters/        # Cover letter generation
+│   │   ├── interview/            # Interview chat and AI interactions
+│   │   ├── interview-sessions/   # Interview session management
 │   │   ├── openrouter/           # AI service integration (parallel agents)
 │   │   ├── admin/                # Admin dashboard APIs
 │   │   └── ...
@@ -240,11 +300,17 @@ myjob/
 │   │   ├── resumes/              # Resume management
 │   │   ├── saved-jobs/           # Application tracking
 │   │   ├── cover-letters/        # Cover letter library
+│   │   ├── interview-prep/       # AI interview preparation
 │   │   └── admin/                # Admin dashboard
 │   └── globals.css               # Global styles
 ├── components/                   # 60+ React components
 │   ├── ui/                       # shadcn/ui components
 │   ├── admin/                    # Admin-specific components
+│   ├── interview/                # Interview prep components
+│   │   ├── type-navigation.tsx   # Interview type switcher
+│   │   ├── interview-chat.tsx    # Chat interface with Q&A
+│   │   ├── feedback-panel.tsx    # Answer feedback display
+│   │   └── session-card.tsx      # Session summary cards
 │   ├── auth-provider.tsx         # Authentication context
 │   ├── job-search.tsx            # Job search interface
 │   ├── enhanced-job-search.tsx   # Advanced search features
@@ -256,6 +322,7 @@ myjob/
 │   │   ├── job-matching/         # Job scoring and analysis
 │   │   ├── resume/               # Resume processing and tailoring
 │   │   ├── cover-letter/         # Cover letter generation
+│   │   ├── interview/            # Interview preparation (5 specialized tip functions)
 │   │   └── shared/               # Common templates and utilities
 │   ├── firebase.ts               # Firebase client configuration
 │   ├── firebase-admin-init.ts    # Firebase Admin SDK
@@ -328,6 +395,270 @@ myjob/
 - Include proper error handling and loading states
 - Update documentation for new features or changes
 - Test Firebase integration and AI functionality thoroughly
+
+---
+
+## ❓ Frequently Asked Questions
+
+### How does the AI resume optimization work?
+
+MyJob uses **8 specialized AI agents** running in parallel to optimize your resume:
+1. **Technical Skills Agent** - Matches and highlights relevant technical skills
+2. **Experience Reframing Agent** - Rewrites experience to match job requirements
+3. **Achievement Amplification Agent** - Quantifies and emphasizes accomplishments
+4. **ATS Optimization Agent** - Ensures keyword optimization for Applicant Tracking Systems
+5. **Professional Summary Agent** - Crafts compelling executive summaries
+6. **Education & Certifications Agent** - Aligns qualifications with job needs
+7. **Gap Mitigation Agent** - Strategically addresses career gaps
+8. **Industry Alignment Agent** - Tailors language for specific industries
+
+**Processing time**: 30-60 seconds (vs. 4+ minutes with sequential processing)
+**Result**: Real-time streaming updates with copy-to-clipboard functionality
+
+### What AI model does MyJob use?
+
+MyJob uses **OpenRouter API** with access to multiple state-of-the-art models:
+- **Primary**: GPT-4, Claude Sonnet, and other frontier models
+- **Fallback**: Intelligent model switching for reliability
+- **Streaming**: Real-time response streaming for better UX
+
+All prompts are managed through a centralized **PromptManager** system with caching, retry logic, and usage statistics.
+
+### How accurate is the job matching score?
+
+The multi-agent scoring system provides **weighted analysis across 6 dimensions**:
+- Technical Skills: 25%
+- Experience Depth: 25%
+- Achievements: 20%
+- Education: 10%
+- Soft Skills: 10%
+- Career Progression: 10%
+
+**Accuracy**: Based on comprehensive resume analysis and job description parsing
+**Transparency**: Detailed breakdown showing strengths, weaknesses, and improvement suggestions
+**Validation**: Tested against hundreds of job applications with positive feedback
+
+### Is my resume data secure and private?
+
+**Yes**. Security is a top priority:
+- ✅ **Firebase Authentication**: Industry-standard auth with Google OAuth
+- ✅ **Firestore Security Rules**: Strict data access controls
+- ✅ **HTTPS Only**: All data transmitted securely
+- ✅ **No Data Sharing**: Your resumes and data are never shared with third parties
+- ✅ **User Ownership**: You own your data and can delete it anytime
+- ✅ **Session Security**: Automatic timeout after 1 hour of inactivity
+
+See [Firestore rules](firestore.rules) for complete security implementation.
+
+### Can I use this for free?
+
+**Yes!** MyJob is free to use with:
+- ✅ Unlimited job searches
+- ✅ AI-powered resume optimization
+- ✅ Cover letter generation
+- ✅ Application tracking
+- ✅ PDF generation
+
+**Note**: OpenRouter API usage may incur costs based on your API key usage. Set up your own OpenRouter API key in environment variables.
+
+### What file formats are supported for resume upload?
+
+Supported formats with intelligent text extraction:
+- ✅ **PDF** (.pdf) - Using pdf-parse library
+- ✅ **DOCX** (.docx) - Using mammoth library
+- ✅ **Markdown** (.md) - Native support
+- ✅ **Text** (.txt) - Plain text
+
+**Max file size**: 10MB
+**Processing**: Automatic text extraction with formatting preservation
+**Validation**: File type and size validation with user-friendly error messages
+
+### How do I deploy this to production?
+
+**Recommended**: Google Cloud Run (fully containerized)
+
+**Quick deployment**:
+```bash
+# Build Docker image
+docker build -t gcr.io/YOUR_PROJECT/myapp .
+
+# Push to Google Container Registry
+docker push gcr.io/YOUR_PROJECT/myapp
+
+# Deploy to Cloud Run
+gcloud run deploy myapp --image gcr.io/YOUR_PROJECT/myapp
+```
+
+**Complete guide**: See [DOCKER_README.md](DOCKER_README.md) and [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+
+**Alternative platforms**:
+- AWS ECS/Fargate
+- Azure Container Apps
+- DigitalOcean App Platform
+- Railway/Render
+
+### What's the difference between this and other job search platforms?
+
+**MyJob advantages**:
+1. **Multi-Agent AI System**: 8 specialized agents vs. single-model processing
+2. **Parallel Processing**: 4-8x faster resume optimization
+3. **Real-Time Streaming**: Live progress updates during AI processing
+4. **Open Source**: Full transparency and customization
+5. **Self-Hosted**: Complete data ownership and privacy
+6. **Modern Stack**: Next.js 15, React 19, TypeScript, Firebase
+7. **Comprehensive**: Job search, resume optimization, cover letters, and tracking in one platform
+
+### How do I set up the development environment?
+
+**Quick start**:
+```bash
+# Clone repository
+git clone https://github.com/jsong1004/myjob.git
+cd myjob
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Run development server
+pnpm dev
+```
+
+**Requirements**:
+- Node.js 18+
+- pnpm (or npm/yarn)
+- Firebase project
+- OpenRouter API key
+- SerpAPI key (for job search)
+
+**Complete setup**: See [Getting Started](#-getting-started) section above
+
+### Can I customize the AI prompts and scoring?
+
+**Yes!** MyJob has a centralized prompt management system:
+
+**Location**: `lib/prompts/` directory
+- `manager.ts` - PromptManager with caching and retry logic
+- `types.ts` - TypeScript definitions for all prompts
+- `job-matching/` - Job scoring agent prompts
+- `resume-tailoring-engine.ts` - Resume optimization prompts
+- `cover-letter-variants.ts` - Cover letter templates
+- `interview/` - Interview preparation prompts (5 specialized tip functions + question generation)
+
+**Customization**:
+1. Edit prompts in respective files
+2. Adjust scoring weights in job-matching agents
+3. Add new prompt variants
+4. Modify system roles in `shared/system-roles.ts`
+
+**Best practices**: Test prompt changes thoroughly and maintain prompt versioning
+
+### Does this work with Applicant Tracking Systems (ATS)?
+
+**Yes!** MyJob includes dedicated **ATS Optimization Agent**:
+- ✅ Keyword matching and density optimization
+- ✅ ATS-friendly formatting (no complex layouts)
+- ✅ Proper section headers and structure
+- ✅ Standard fonts and readable text
+- ✅ Avoids images, tables, and graphics in critical sections
+
+**PDF Generation**: Creates ATS-compatible PDFs with proper text extraction
+
+### How does the AI interview preparation work?
+
+MyJob provides **comprehensive interview preparation** with 5 specialized practice modes:
+
+**Interview Types**:
+1. **Interview Tips & Guidance** - General preparation strategies covering STAR method, common questions, body language
+2. **Recruiter Screening** - HR phone screen practice with salary negotiation and background verification strategies
+3. **Technical Assessment** - Coding challenges with 5-step problem-solving framework and algorithm practice
+4. **Technical & Behavioral** - Hybrid questions combining technical depth with STAR method storytelling
+5. **Team & Culture Fit** - Collaboration scenarios, conflict resolution, and cultural alignment assessment
+
+**How it works**:
+1. **Auto-Display Tips**: When you select an interview type, specialized tips appear immediately (no generic intro)
+2. **Type-Specific Guidance**: Each type provides unique, actionable preparation content
+   - Recruiter: Salary scripts, timeline prep, red flags to avoid
+   - Technical: Problem-solving frameworks, live coding tips, when you're stuck strategies
+   - Behavioral: Technical STAR method, leadership without being a manager
+   - Culture: DEI contributions, culture add vs fit, conflict resolution examples
+3. **Interactive Practice**: Click "Start Practice" to begin Q&A
+   - AI generates questions based on your resume and job description
+   - You answer the question
+   - AI analyzes your answer with rating (1-10), strengths, improvements, suggested answer
+   - Next question automatically generated
+4. **Session Tracking**: Each interview type maintains separate conversation history
+
+**AI Intelligence**:
+- **Context-aware questions**: Tailored to job requirements and your experience
+- **No repetition**: Tracks previous questions to avoid duplicates
+- **Structured feedback**: Rating, score, strengths, improvements, enhanced answer suggestion
+- **Persistent state**: Switch between types anytime, progress is saved
+
+**Result**: Complete interview preparation covering every stage from HR screening to final culture fit assessment.
+
+### How do I run this with Docker?
+
+**Quick start with Docker Compose**:
+```bash
+# Build and run with docker-compose
+docker-compose up --build
+
+# Or run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
+
+**Application available at**: http://localhost:3000
+
+**Docker Compose Features**:
+- ✅ Automatic environment variable loading from `.env.local`
+- ✅ Chromium/Puppeteer configuration with proper security settings
+- ✅ 2GB shared memory for browser automation
+- ✅ Health checks and auto-restart
+- ✅ Service account key mounting for local development
+- ✅ Production-ready configuration
+
+**Complete Docker guides**:
+- **[DOCKER_README.md](DOCKER_README.md)** - Dockerfile details and manual Docker commands
+- **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** - Google Cloud Run deployment guide
+
+**Manual Docker Build** (without compose):
+```bash
+# Build image
+docker build -t myjob .
+
+# Run container
+docker run -p 3000:3000 --env-file .env.local myjob
+```
+
+**Features**:
+- ✅ Complete Next.js 15 build with 51/51 static pages
+- ✅ Chromium for PDF generation and web scraping
+- ✅ Firebase integration with service account support
+- ✅ ~1.2GB optimized multi-stage image
+- ✅ 232ms startup time with health monitoring
+
+---
+
+## 🏷️ SEO Keywords & Topics
+
+**Primary Keywords**: AI resume builder, job search automation, resume optimization AI, ATS resume checker, cover letter generator AI, job application tracker, career development tools, AI interview practice, interview preparation platform
+
+**Technology Keywords**: Next.js 15 app, React 19, Firebase authentication, OpenRouter AI, Google Gemini AI, multi-agent system, parallel AI processing, TypeScript job platform, Docker containerization, Google Cloud Run
+
+**Use Cases**: Resume tailoring, job matching algorithm, career transition, interview preparation, ATS optimization, professional resume builder, AI career coach, job search organization, technical interview practice, behavioral interview training, recruiter screening prep, culture fit assessment
+
+**Interview Keywords**: AI interview coach, technical interview prep, behavioral interview practice, STAR method training, recruiter screening tips, salary negotiation strategies, coding interview practice, system design interview, culture fit questions, interview feedback AI
+
+**Developer Keywords**: Next.js Docker setup, Firebase integration, AI prompt engineering, multi-agent orchestration, streaming API responses, TypeScript best practices, React Server Components
+
+---
 
 ## 📄 License
 

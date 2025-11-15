@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Bookmark, ExternalLink, Loader2, AlertCircle, FileText, Edit, Calendar, StickyNote, ChevronUp, ChevronDown, Search, X, Plus, RefreshCw, Sparkles, PenTool, Eye } from "lucide-react"
+import { Bookmark, ExternalLink, Loader2, AlertCircle, FileText, Edit, Calendar, StickyNote, ChevronUp, ChevronDown, Search, X, Plus, RefreshCw, Sparkles, PenTool, Eye, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
@@ -20,6 +20,9 @@ import type { SavedJob, ApplicationStatus } from "@/lib/types"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 import { MatchingScoreDialog } from "@/components/matching-score-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { parseDateInput } from "@/lib/utils/date"
+
+const REMINDER_LOOKAHEAD_MS = 7 * 24 * 60 * 60 * 1000
 
 export default function SavedJobsPage() {
   return (
@@ -243,8 +246,8 @@ function SavedJobsPageContent() {
         bValue = b.status || 'saved'
         break
       case 'savedAt':
-        aValue = a.savedAt instanceof Date ? a.savedAt : new Date(a.savedAt.seconds * 1000)
-        bValue = b.savedAt instanceof Date ? b.savedAt : new Date(b.savedAt.seconds * 1000)
+        aValue = parseDateInput(a.savedAt)?.getTime() ?? 0
+        bValue = parseDateInput(b.savedAt)?.getTime() ?? 0
         break
       case 'matchingScore':
         aValue = a.matchingScore || 0
@@ -258,6 +261,15 @@ function SavedJobsPageContent() {
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
     return 0
   })
+
+  const reminderCutoff = Date.now() + REMINDER_LOOKAHEAD_MS
+  const upcomingReminderJobs = savedJobs.reduce<{ job: SavedJob; reminder: Date }[]>((acc, job) => {
+    const reminder = parseDateInput(job.reminderDate)
+    if (reminder && reminder.getTime() <= reminderCutoff) {
+      acc.push({ job, reminder })
+    }
+    return acc
+  }, [])
 
   const SortableHeader = ({ field, children }: { field: 'title' | 'company' | 'status' | 'savedAt' | 'matchingScore', children: React.ReactNode }) => (
     <TableHead 
@@ -280,12 +292,8 @@ function SavedJobsPageContent() {
     setStatus(job.status || 'saved')
     setNotes(job.notes || '')
     setReminderNote(job.reminderNote || '')
-    if (job.reminderDate) {
-      const date = job.reminderDate instanceof Date ? job.reminderDate : new Date(job.reminderDate.seconds * 1000)
-      setReminderDate(date.toISOString().split('T')[0])
-    } else {
-      setReminderDate('')
-    }
+    const date = parseDateInput(job.reminderDate)
+    setReminderDate(date ? date.toISOString().split('T')[0] : '')
   }
 
   const getStatusColor = (status: ApplicationStatus): string => {
@@ -461,6 +469,54 @@ function SavedJobsPageContent() {
 
     // Navigate to cover letter page
     router.push(`/cover-letter/${job.jobId}`)
+  }
+
+  const handlePracticeInterview = async (job: SavedJob) => {
+    if (!user || !auth?.currentUser) return
+
+    try {
+      const token = await auth.currentUser.getIdToken()
+
+      // Get user's default resume
+      const resumeResponse = await fetch('/api/resumes', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      let resume = ''
+      if (resumeResponse.ok) {
+        const resumeData = await resumeResponse.json()
+        const defaultResume = resumeData.resumes.find((r: any) => r.isDefault) || resumeData.resumes[0]
+        resume = defaultResume?.content || ''
+      }
+
+      // Create or get existing session
+      const response = await fetch('/api/interview-sessions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          jobDescription: job.originalData?.description || job.summary || '',
+          resume
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to create session')
+
+      const data = await response.json()
+
+      // Navigate to interview page
+      router.push(`/interview-prep/${data.session.id}`)
+    } catch (err) {
+      console.error("Failed to start interview practice:", err)
+      alert("Failed to start interview practice. Please try again.")
+    }
   }
 
   const getScoreColor = (score: number) => {
@@ -896,19 +952,17 @@ function SavedJobsPageContent() {
           </Card>
 
           {/* Reminder notifications */}
-          {savedJobs.filter(job => job.reminderDate && new Date(job.reminderDate instanceof Date ? job.reminderDate : job.reminderDate.seconds * 1000) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)).length > 0 && (
+          {upcomingReminderJobs.length > 0 && (
             <Alert className="mb-4 border-blue-200 bg-blue-50">
               <Calendar className="h-4 w-4 text-blue-600" />
               <AlertDescription>
                 <div className="font-medium text-blue-800 mb-2">Upcoming Reminders</div>
                 <div className="space-y-1">
-                  {savedJobs
-                    .filter(job => job.reminderDate && new Date(job.reminderDate instanceof Date ? job.reminderDate : job.reminderDate.seconds * 1000) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
-                    .map(job => (
+                  {upcomingReminderJobs.map(({ job, reminder }) => (
                       <div key={job.id} className="text-sm text-blue-700">
                         <strong>{job.title}</strong> at {job.company} - {job.reminderNote || 'Follow up'} 
                         <span className="text-blue-600 ml-2">
-                          ({new Date(job.reminderDate instanceof Date ? job.reminderDate : job.reminderDate.seconds * 1000).toLocaleDateString()})
+                          ({reminder.toLocaleDateString()})
                         </span>
                       </div>
                     ))
@@ -967,14 +1021,16 @@ function SavedJobsPageContent() {
                         <SortableHeader field="matchingScore">
                           <div className="text-center">Score</div>
                         </SortableHeader>
-                        <TableHead className="w-[320px] text-left">Actions</TableHead>
+                        <TableHead className="w-[380px] text-left">Actions</TableHead>
                         <SortableHeader field="status">Status</SortableHeader>
                         <TableHead>Notes</TableHead>
                       </TableRow>
                     </TableHeader>
                   <TableBody>
-                    {sortedJobs.map((job) => (
-                      <TableRow key={job.id}>
+                    {sortedJobs.map((job) => {
+                      const reminderDateObj = parseDateInput(job.reminderDate)
+                      return (
+                        <TableRow key={job.id}>
                         <TableCell className="px-3 py-2">
                           <div className="font-medium">
                             {(job.originalData?.applyUrl || job.applyUrl) ? (
@@ -1092,16 +1148,16 @@ function SavedJobsPageContent() {
                             </TooltipProvider>
                           </div>
                         </TableCell>
-                        <TableCell className="text-left px-2 py-2 w-[320px]">
-                          <div className="grid grid-cols-2 gap-1 w-[300px]">
+                        <TableCell className="text-left px-2 py-2 w-[380px]">
+                          <div className="grid grid-cols-3 gap-1 w-[360px]">
                             {/* Top Row - Primary Actions */}
-                            <Button 
+                            <Button
                               variant={job.resumeTailoredAt ? "default" : "outline"}
                               size="sm"
                               onClick={() => handleTailorResume(job)}
                               className={`flex items-center gap-1 text-xs px-2 py-1 h-7 relative w-full ${
-                                job.resumeTailoredAt 
-                                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                                job.resumeTailoredAt
+                                  ? 'bg-green-600 hover:bg-green-700 text-white'
                                   : (job.originalData?.enhancedScoreDetails)
                                     ? 'border-blue-200 text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 bg-gradient-to-r from-blue-50 to-purple-50'
                                     : 'border-blue-200 text-blue-600 hover:bg-blue-50'
@@ -1113,20 +1169,29 @@ function SavedJobsPageContent() {
                                 <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
                               )}
                             </Button>
-                            <Button 
+                            <Button
                               variant={job.coverLetterCreatedAt ? "default" : "outline"}
                               size="sm"
                               onClick={() => handleCreateCoverLetter(job)}
                               className={`flex items-center gap-1 text-xs px-2 py-1 h-7 w-full ${
-                                job.coverLetterCreatedAt 
-                                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                job.coverLetterCreatedAt
+                                  ? 'bg-purple-600 hover:bg-purple-700 text-white'
                                   : 'border-purple-200 text-purple-600 hover:bg-purple-50'
                               }`}
                             >
                               <PenTool className="h-3 w-3 flex-shrink-0" />
                               <span className="truncate">Cover</span>
                             </Button>
-                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePracticeInterview(job)}
+                              className="flex items-center gap-1 text-xs px-2 py-1 h-7 w-full border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                            >
+                              <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">Interview</span>
+                            </Button>
+
                             {/* Bottom Row - Secondary Actions */}
                             <TooltipProvider>
                               <Tooltip>
@@ -1170,11 +1235,11 @@ function SavedJobsPageContent() {
                           <Badge className={getStatusColor(job.status || 'saved')}>
                             {getStatusLabel(job.status || 'saved')}
                           </Badge>
-                          {job.reminderDate && (
+                          {reminderDateObj && (
                             <div className="flex items-center gap-1 mt-1">
                               <Calendar className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
-                                {new Date(job.reminderDate instanceof Date ? job.reminderDate : job.reminderDate.seconds * 1000).toLocaleDateString()}
+                                {reminderDateObj.toLocaleDateString()}
                               </span>
                             </div>
                           )}
@@ -1202,8 +1267,9 @@ function SavedJobsPageContent() {
                             )}
                           </div>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                        </TableRow>
+                      )
+                    })}
                   </TableBody>
                   </Table>
                 </div>
@@ -1297,7 +1363,6 @@ function SavedJobsPageContent() {
               return (
                 <MatchingScoreDialog 
                   job={{
-                    ...selectedJob.originalData,
                     id: selectedJob.jobId,
                     title: selectedJob.title,
                     company: selectedJob.company,

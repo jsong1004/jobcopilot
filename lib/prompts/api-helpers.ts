@@ -500,22 +500,92 @@ export async function getAvailablePrompts(): Promise<Array<{
 /**
  * Execute multi-agent job scoring - 8x faster, more accurate scoring
  */
-export async function executeMultiAgentJobScoring(request: JobScoringRequest): Promise<JobSearchResult[]> {
+export async function executeMultiAgentJobScoring(request: JobScoringRequest, useLangGraph: boolean = true): Promise<JobSearchResult[]> {
   try {
     console.log('[MultiAgent] Starting multi-agent scoring for', request.jobs.length, 'jobs')
-    
+
     const openRouterApiKey = process.env.OPENROUTER_API_KEY
     if (!openRouterApiKey) {
       throw new Error('Missing OpenRouter API key for multi-agent scoring')
     }
 
-    // Process each job individually with multi-agent scoring
+    // Use LangGraph optimized system if enabled
+    if (useLangGraph) {
+      console.log('[MultiAgent] Using LangGraph optimized 4-agent system')
+      const { executeOptimizedLangGraphScoring } = await import('./langgraph-scoring-engine')
+
+      const scoredJobs: JobSearchResult[] = []
+
+      for (const job of request.jobs) {
+        try {
+          console.log(`[LangGraph] Processing job: ${job.title} at ${job.company}`)
+
+          // Execute LangGraph optimized scoring
+          const multiAgentResult = await executeOptimizedLangGraphScoring(
+            { resume: request.resume },
+            job,
+            request.userId
+          )
+
+          // Transform result to JobSearchResult format
+          const scoredJob: JobSearchResult = {
+            ...job,
+            matchingScore: multiAgentResult.overallScore,
+            matchingSummary: multiAgentResult.hiringRecommendation,
+            scoreDetails: {
+              strengths: multiAgentResult.keyStrengths,
+              gaps: multiAgentResult.redFlags,
+              recommendations: multiAgentResult.interviewFocus
+            },
+            enhancedScoreDetails: {
+              overallScore: multiAgentResult.overallScore,
+              category: multiAgentResult.category,
+              breakdown: transformBreakdownToScoreDetails(multiAgentResult.breakdown),
+              redFlags: multiAgentResult.redFlags,
+              positiveIndicators: multiAgentResult.positiveIndicators,
+              hiringRecommendation: multiAgentResult.hiringRecommendation,
+              keyStrengths: multiAgentResult.keyStrengths,
+              keyWeaknesses: multiAgentResult.keyWeaknesses,
+              interviewFocus: multiAgentResult.interviewFocus,
+              summary: multiAgentResult.hiringRecommendation,
+              validatedAt: multiAgentResult.processedAt,
+              scoringVersion: multiAgentResult.executionSummary.scoringVersion,
+              executionSummary: multiAgentResult.executionSummary,
+              usage: multiAgentResult.usage // Include actual token usage data
+            }
+          }
+
+          scoredJobs.push(scoredJob)
+
+        } catch (jobError) {
+          console.error(`[LangGraph] Error processing job ${job.id}:`, jobError)
+
+          // Add job with error state
+          scoredJobs.push({
+            ...job,
+            matchingScore: 0,
+            matchingSummary: 'LangGraph analysis failed',
+            scoreDetails: {
+              strengths: [],
+              gaps: ['Analysis system error'],
+              recommendations: ['Manual review recommended']
+            }
+          })
+        }
+      }
+
+      console.log(`[LangGraph] Completed scoring for ${scoredJobs.length} jobs`)
+      return scoredJobs
+    }
+
+    // Fallback to legacy 8-agent system
+    console.log('[MultiAgent] Using legacy 8-agent system')
     const scoredJobs: JobSearchResult[] = []
-    
+
     for (const job of request.jobs) {
       try {
         console.log(`[MultiAgent] Processing job: ${job.title} at ${job.company}`)
-        
+
         // Execute multi-agent scoring for this job
         const multiAgentResult = await calculateMultiAgentScore(
           { resume: request.resume },
@@ -523,10 +593,10 @@ export async function executeMultiAgentJobScoring(request: JobScoringRequest): P
           openRouterApiKey,
           request.userId
         )
-        
+
         // Track performance metrics
         trackAgentPerformance(multiAgentResult)
-        
+
         // Transform result to JobSearchResult format
         const scoredJob: JobSearchResult = {
           ...job,
@@ -554,12 +624,12 @@ export async function executeMultiAgentJobScoring(request: JobScoringRequest): P
             usage: multiAgentResult.usage // Include actual token usage data
           }
         }
-        
+
         scoredJobs.push(scoredJob)
-        
+
       } catch (jobError) {
         console.error(`[MultiAgent] Error processing job ${job.id}:`, jobError)
-        
+
         // Add job with error state
         scoredJobs.push({
           ...job,
@@ -573,13 +643,13 @@ export async function executeMultiAgentJobScoring(request: JobScoringRequest): P
         })
       }
     }
-    
+
     console.log(`[MultiAgent] Completed scoring for ${scoredJobs.length} jobs`)
     return scoredJobs
-    
+
   } catch (error) {
     console.error('[MultiAgent] Multi-agent scoring failed:', error)
-    
+
     // Fallback to enhanced scoring
     console.log('[MultiAgent] Falling back to enhanced scoring system')
     return executeEnhancedJobScoring(request)

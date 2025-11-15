@@ -6,6 +6,7 @@ import { ArrowLeft, MapPin, Calendar, DollarSign, Building, Bookmark, ExternalLi
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { AuthProvider } from "@/components/auth-provider"
+import { formatDateSafe } from "@/lib/utils/date"
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -31,18 +32,13 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
     return notFound();
   }
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "Not specified"
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    } catch (e) {
-      return dateString
-    }
-  }
+  const formatDate = (dateString: string) =>
+    formatDateSafe(
+      dateString,
+      { month: "long", day: "numeric", year: "numeric" },
+      "en-US",
+      "Not specified"
+    ) || "Not specified"
 
   const renderSection = (title: string, items: string[] | undefined) => {
     if (!items || items.length === 0) return null;

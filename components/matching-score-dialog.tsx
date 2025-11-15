@@ -5,8 +5,9 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, AlertCircle, XCircle, Download } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useState } from "react"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Job {
   id: string
@@ -26,123 +27,205 @@ interface MatchingScoreDialogProps {
 
 export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialogProps) {
   const [isDownloading, setIsDownloading] = useState(false)
-  
-  // Use real score details if available, otherwise fall back to mock data
-  const scoreDetails = job.scoreDetails
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
   const enhancedScoreDetails = (job as any).enhancedScoreDetails
-  
-  // Debug logging
-  console.log('🔍 [Dialog] Job data received:', {
-    title: job.title,
-    hasScoreDetails: !!scoreDetails,
-    hasEnhancedScoreDetails: !!enhancedScoreDetails,
-    scoreDetailsKeys: scoreDetails ? Object.keys(scoreDetails) : [],
-    enhancedScoreDetailsKeys: enhancedScoreDetails ? Object.keys(enhancedScoreDetails) : [],
-    scoreDetailsData: scoreDetails,
-    enhancedScoreDetails: enhancedScoreDetails,
-    fullJobData: job
-  })
-  
-  // Check if we have multi-agent or enhanced scoring data
   const hasEnhancedData = enhancedScoreDetails?.breakdown
-  const isMultiAgent = enhancedScoreDetails?.executionSummary || enhancedScoreDetails?.scoringVersion?.includes('multi-agent')
-  const hasMultiAgentData = hasEnhancedData && isMultiAgent
-  
-  const mockData = {
-    skills: {
-      score: 85,
-      matched: ["Communication", "Problem Solving", "Teamwork"],
-      missing: ["Industry Specific Skills"],
-    },
-    experience: {
-      score: 80,
-      yearsRequired: 3,
-      yearsHave: 2,
-      relevantExperience: "General Professional Experience",
-    },
-    education: {
-      score: 75,
-      required: "Bachelor's degree preferred",
-      have: "Educational background",
-    },
-    keywords: {
-      score: 70,
-      matched: ["Professional", "Dedicated", "Results-oriented"],
-      total: 10,
-    },
+
+  const toStrings = (arr: any): string[] => {
+    if (!arr) return []
+    if (Array.isArray(arr)) return arr.map(v => typeof v === 'string' ? v : JSON.stringify(v))
+    return [typeof arr === 'string' ? arr : JSON.stringify(arr)]
   }
 
-  // Helper function to safely extract strings from objects or arrays
-  const extractStringArray = (data: any): string[] => {
-    if (!data) return []
-    if (Array.isArray(data)) {
-      return data.map(item => {
-        if (typeof item === 'string') return item
-        if (typeof item === 'object' && item !== null) {
-          // Handle objects with different structures
-          if (item.weakness) return item.weakness
-          if (item.strength) return item.strength
-          if (item.skill) return item.skill
-          if (item.name) return item.name
-          if (item.description) return item.description
-          return JSON.stringify(item)
+  const cleanReasoning = (text?: string) => {
+    if (!text) return ''
+    return text.replace(/^\s*summary\s*:\s*/i, '')
+  }
+
+  // Format long reasoning into structured content with bullets
+  const formatReasoning = (text?: string): { summary: string; bullets: string[] } => {
+    const raw = cleanReasoning(text || '')
+    if (!raw) return { summary: '', bullets: [] }
+
+    // Remove ** markers and clean up formatting
+    const cleaned = raw
+      .replace(/\*\*/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s*[—–-]\s*/g, ' — ')
+      .trim()
+
+    // Try to extract bullet points from text
+    const bullets: string[] = []
+
+    // Look for patterns like "• " or numbered lists
+    const bulletPattern = /[•·]\s*([^•·]+)/g
+    const numberPattern = /\d+\)\s*([^0-9]+?)(?=\d+\)|$)/g
+
+    let matches
+    while ((matches = bulletPattern.exec(cleaned)) !== null) {
+      bullets.push(matches[1].trim())
+    }
+
+    // If no bullets found with bullet points, try numbered lists
+    if (bullets.length === 0) {
+      while ((matches = numberPattern.exec(cleaned)) !== null) {
+        bullets.push(matches[1].trim())
+      }
+    }
+
+    // If still no bullets, split by sentences and take key points
+    if (bullets.length === 0) {
+      const sentences = cleaned.split(/(?<=[.!?])\s+/)
+      // Extract key phrases after colons or important keywords
+      sentences.forEach(sentence => {
+        if (sentence.includes(':')) {
+          const parts = sentence.split(':')
+          if (parts.length > 1) {
+            bullets.push(parts[1].trim())
+          }
+        } else if (sentence.length > 20 && sentence.length < 200) {
+          bullets.push(sentence)
         }
-        return String(item)
       })
     }
-    if (typeof data === 'string') return [data]
-    return []
+
+    // Get a summary (first sentence or main point)
+    let summary = cleaned.split(/[.!?]/)[0] + '.'
+    if (summary.length > 200) {
+      summary = summary.substring(0, 197) + '...'
+    }
+
+    return {
+      summary: summary,
+      bullets: bullets.slice(0, 5).map(b => b.length > 150 ? b.substring(0, 147) + '...' : b)
+    }
   }
 
-  // If we have enhanced scoring data (multi-agent or regular enhanced), use it
-  const matchingBreakdown = hasEnhancedData ? {
-    skills: {
+  // 4-category mapping from enhanced breakdown
+  const categories = hasEnhancedData ? [
+    {
+      key: 'technicalSkills',
+      title: 'Technical Competency',
+      icon: '🛠️',
       score: enhancedScoreDetails.breakdown.technicalSkills?.score || 0,
-      matched: extractStringArray(enhancedScoreDetails.keyStrengths).slice(0, 5), // Show top 5 strengths
-      missing: extractStringArray(enhancedScoreDetails.keyWeaknesses).slice(0, 5), // Show top 5 weaknesses
+      reasoning: cleanReasoning(enhancedScoreDetails.breakdown.technicalSkills?.reasoning)
     },
-    experience: {
+    {
+      key: 'experienceDepth',
+      title: 'Experience & Growth',
+      icon: '💼',
       score: enhancedScoreDetails.breakdown.experienceDepth?.score || 0,
-      yearsRequired: 3, // Default as we don't have this in enhanced scoring
-      yearsHave: 2, // Default as we don't have this in enhanced scoring
-      relevantExperience: enhancedScoreDetails.breakdown.experienceDepth?.reasoning || "See detailed analysis",
+      reasoning: cleanReasoning(enhancedScoreDetails.breakdown.experienceDepth?.reasoning)
     },
-    education: {
-      score: enhancedScoreDetails.breakdown.education?.score || 0,
-      required: "See job requirements",
-      have: enhancedScoreDetails.breakdown.education?.reasoning || "See detailed analysis",
-    },
-    keywords: {
+    {
+      key: 'achievements',
+      title: 'Impact & Achievements',
+      icon: '🏆',
       score: enhancedScoreDetails.breakdown.achievements?.score || 0,
-      matched: extractStringArray(enhancedScoreDetails.positiveIndicators).slice(0, 6), // Top 6 positive indicators
-      total: extractStringArray(enhancedScoreDetails.positiveIndicators).length + extractStringArray(enhancedScoreDetails.redFlags).length,
+      reasoning: cleanReasoning(enhancedScoreDetails.breakdown.achievements?.reasoning)
     },
-  } : scoreDetails ? {
-    // Legacy enhanced scoring format
-    skills: {
-      score: scoreDetails.skillsAndKeywords?.score || mockData.skills.score,
-      matched: scoreDetails.skillsAndKeywords?.breakdown?.requiredSkills ? 
-        [scoreDetails.skillsAndKeywords.breakdown.requiredSkills] : mockData.skills.matched,
-      missing: scoreDetails.skillsAndKeywords?.breakdown?.technologyAndTools ? 
-        [scoreDetails.skillsAndKeywords.breakdown.technologyAndTools] : mockData.skills.missing,
-    },
-    experience: {
-      score: scoreDetails.experienceAndAchievements?.score || mockData.experience.score,
-      yearsRequired: mockData.experience.yearsRequired,
-      yearsHave: mockData.experience.yearsHave,
-      relevantExperience: scoreDetails.experienceAndAchievements?.breakdown?.roleRelevance || mockData.experience.relevantExperience,
-    },
-    education: {
-      score: scoreDetails.educationAndCertifications?.score || mockData.education.score,
-      required: mockData.education.required,
-      have: scoreDetails.educationAndCertifications?.rationale || mockData.education.have,
-    },
-    keywords: {
-      score: scoreDetails.jobTitleAndSeniority?.score || mockData.keywords.score,
-      matched: mockData.keywords.matched,
-      total: mockData.keywords.total,
-    },
-  } : mockData
+    {
+      key: 'education',
+      title: 'Cultural & Educational Fit',
+      icon: '🎓',
+      score: enhancedScoreDetails.breakdown.education?.score || 0,
+      reasoning: cleanReasoning(enhancedScoreDetails.breakdown.education?.reasoning)
+    }
+  ] : []
+
+  const strengths = toStrings(enhancedScoreDetails?.keyStrengths).slice(0, 6)
+
+  // Normalize weaknesses to readable objects
+  const normalizeWeaknesses = (raw: any): Array<{ title: string; impact?: string; plan?: { shortTerm?: string; midTerm?: string; longTerm?: string } }> => {
+    const replaceSmartQuotes = (s: string) => s
+      .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+      .replace(/[\u2018\u2019\u2032]/g, "'")
+
+    // Helper to ensure we get a string from any value
+    const ensureString = (value: any): string => {
+      if (typeof value === 'string') return value
+      if (value === null || value === undefined) return ''
+      if (typeof value === 'object') return JSON.stringify(value)
+      return String(value)
+    }
+
+    // Helper to clean JSON-like text
+    const cleanJsonText = (text: string): string => {
+      return text
+        .replace(/^\{?"?weakness"?:\s*"?/i, '')
+        .replace(/^\{?"?impact"?:\s*"?/i, '')
+        .replace(/^\{?"?shortTerm"?:\s*"?/i, '')
+        .replace(/^\{?"?midTerm"?:\s*"?/i, '')
+        .replace(/^\{?"?longTerm"?:\s*"?/i, '')
+        .replace(/"?\}?$/g, '')
+        .replace(/\\"/g, '"')
+        .replace(/\\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    }
+
+    const arr = Array.isArray(raw) ? raw : (raw ? [raw] : [])
+    const out: Array<{ title: string; impact?: string; plan?: { shortTerm?: string; midTerm?: string; longTerm?: string } }> = []
+    for (const item of arr) {
+      if (typeof item === 'object' && item !== null) {
+        const title = ensureString((item as any).weakness || (item as any).description || item)
+        const impact = (item as any).impact ? ensureString((item as any).impact) : undefined
+        const improvementPlan = (item as any).improvementPlan
+
+        let plan: { shortTerm?: string; midTerm?: string; longTerm?: string } | undefined
+        if (improvementPlan && typeof improvementPlan === 'object') {
+          plan = {
+            shortTerm: improvementPlan.shortTerm ? ensureString(improvementPlan.shortTerm) : undefined,
+            midTerm: improvementPlan.midTerm ? ensureString(improvementPlan.midTerm) : undefined,
+            longTerm: improvementPlan.longTerm ? ensureString(improvementPlan.longTerm) : undefined,
+          }
+        }
+
+        out.push({ title, impact, plan })
+        continue
+      }
+      if (typeof item === 'string') {
+        const s = replaceSmartQuotes(item.trim())
+        try {
+          const parsed = JSON.parse(s)
+          const title = ensureString(parsed?.weakness || parsed?.description || item)
+          const impact = parsed?.impact ? ensureString(parsed.impact) : undefined
+
+          let plan: { shortTerm?: string; midTerm?: string; longTerm?: string } | undefined
+          if (parsed?.improvementPlan && typeof parsed.improvementPlan === 'object') {
+            plan = {
+              shortTerm: parsed.improvementPlan.shortTerm ? ensureString(parsed.improvementPlan.shortTerm) : undefined,
+              midTerm: parsed.improvementPlan.midTerm ? ensureString(parsed.improvementPlan.midTerm) : undefined,
+              longTerm: parsed.improvementPlan.longTerm ? ensureString(parsed.improvementPlan.longTerm) : undefined,
+            }
+          }
+
+          out.push({ title, impact, plan })
+        } catch {
+          // Try to extract key:value pairs with regex if JSON.parse fails
+          const mWeak = s.match(/"?weakness"?\s*:\s*"([\s\S]*?)"\s*(,|\}|$)/i)
+          const mImpact = s.match(/"?impact"?\s*:\s*"([\s\S]*?)"\s*(,|\}|$)/i)
+          const shortT = s.match(/"?shortTerm"?\s*:\s*"([\s\S]*?)"/i)
+          const midT = s.match(/"?midTerm"?\s*:\s*"([\s\S]*?)"/i)
+          const longT = s.match(/"?longTerm"?\s*:\s*"([\s\S]*?)"/i)
+          if (mWeak) {
+            out.push({
+              title: mWeak[1],
+              impact: mImpact?.[1],
+              plan: { shortTerm: shortT?.[1], midTerm: midT?.[1], longTerm: longT?.[1] }
+            })
+          } else {
+            out.push({ title: s })
+          }
+        }
+      }
+    }
+    return out.slice(0, 6)
+  }
+
+  const weaknesses = normalizeWeaknesses(enhancedScoreDetails?.keyWeaknesses)
+  const interviewFocus = toStrings(enhancedScoreDetails?.interviewFocus).slice(0, 5)
 
   const getScoreIcon = (score: number) => {
     if (score >= 90) return <CheckCircle className="h-5 w-5 text-green-500" />
@@ -159,7 +242,14 @@ export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialo
   const handleDownload = async () => {
     setIsDownloading(true)
     try {
-      // Prepare analysis data for PDF generation
+      const pdfEnhanced = hasEnhancedData ? {
+        ...enhancedScoreDetails,
+        // Ensure insights are present in PDF even if model returned objects
+        keyStrengths: strengths,
+        keyWeaknesses: weaknesses,
+        interviewFocus: enhancedScoreDetails?.interviewFocus
+      } : null
+
       const analysisData = {
         job: {
           title: job.title,
@@ -167,23 +257,21 @@ export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialo
           matchingScore: job.matchingScore,
           matchingSummary: job.matchingSummary,
         },
-        breakdown: matchingBreakdown,
-        enhancedScoreDetails: hasEnhancedData ? enhancedScoreDetails : null,
+        breakdown: {
+          skills: { score: enhancedScoreDetails?.breakdown?.technicalSkills?.score || 0, matched: strengths, missing: weaknesses },
+          experience: { score: enhancedScoreDetails?.breakdown?.experienceDepth?.score || 0, yearsRequired: 3, yearsHave: 2, relevantExperience: cleanReasoning(enhancedScoreDetails?.breakdown?.experienceDepth?.reasoning) || '' },
+          education: { score: enhancedScoreDetails?.breakdown?.education?.score || 0, required: 'See job requirements', have: cleanReasoning(enhancedScoreDetails?.breakdown?.education?.reasoning) || '' },
+          keywords: { score: enhancedScoreDetails?.breakdown?.achievements?.score || 0, matched: strengths, total: strengths.length + weaknesses.length },
+        },
+        enhancedScoreDetails: pdfEnhanced,
       }
 
       const response = await fetch('/api/jobs/match-analysis-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(analysisData),
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to generate PDF')
-      }
-
-      // Handle PDF download
+      if (!response.ok) throw new Error('Failed to generate PDF')
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -193,9 +281,6 @@ export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialo
       a.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
-    } catch (error) {
-      console.error('Error downloading PDF:', error)
-      // You might want to show a toast notification here
     } finally {
       setIsDownloading(false)
     }
@@ -208,17 +293,9 @@ export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialo
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               Match Analysis: {job.title}
-              <Badge variant="secondary" className="ml-2">
-                {job.matchingScore}% Match
-              </Badge>
+              <Badge variant="secondary" className="ml-2">{job.matchingScore}% Match</Badge>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="flex items-center gap-2"
-            >
+            <Button variant="outline" size="sm" onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               {isDownloading ? 'Generating...' : 'Download PDF'}
             </Button>
@@ -226,309 +303,189 @@ export function MatchingScoreDialog({ job, isOpen, onClose }: MatchingScoreDialo
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Overall Score */}
           <div className="text-center p-6 bg-gray-50 rounded-lg">
             <div className="text-4xl font-bold text-blue-600 mb-2">{job.matchingScore}%</div>
             <p className="text-gray-600">Overall Match Score</p>
             <Progress value={job.matchingScore} className="mt-4" />
           </div>
 
-          {/* Skills Analysis */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              {getScoreIcon(matchingBreakdown.skills.score)}
-              <h3 className="font-semibold">Skills Match</h3>
-              <span className={`font-bold ${getScoreColor(matchingBreakdown.skills.score)}`}>
-                {matchingBreakdown.skills.score}%
-              </span>
-            </div>
-            <Progress value={matchingBreakdown.skills.score} className="mb-3" />
+          {hasEnhancedData && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm font-medium text-green-600 mb-2">Matched Skills:</p>
-                <div className="flex flex-wrap gap-1">
-                  {matchingBreakdown.skills.matched.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="text-xs bg-green-50 text-green-700">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-orange-600 mb-2">Missing Skills:</p>
-                <div className="flex flex-wrap gap-1">
-                  {matchingBreakdown.skills.missing.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="text-xs bg-orange-50 text-orange-700">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Experience Analysis */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              {getScoreIcon(matchingBreakdown.experience.score)}
-              <h3 className="font-semibold">Experience Match</h3>
-              <span className={`font-bold ${getScoreColor(matchingBreakdown.experience.score)}`}>
-                {matchingBreakdown.experience.score}%
-              </span>
-            </div>
-            <Progress value={matchingBreakdown.experience.score} className="mb-3" />
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Required Experience:</span>
-                <span className="text-sm font-medium">{matchingBreakdown.experience.yearsRequired} years</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Your Experience:</span>
-                <span className="text-sm font-medium">{matchingBreakdown.experience.yearsHave} years</span>
-              </div>
-              <div>
-                <span className="text-sm text-gray-600">Relevant Areas:</span>
-                <p className="text-sm font-medium">{matchingBreakdown.experience.relevantExperience}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Education Analysis */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              {getScoreIcon(matchingBreakdown.education.score)}
-              <h3 className="font-semibold">Education Match</h3>
-              <span className={`font-bold ${getScoreColor(matchingBreakdown.education.score)}`}>
-                {matchingBreakdown.education.score}%
-              </span>
-            </div>
-            <Progress value={matchingBreakdown.education.score} className="mb-3" />
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div>
-                <span className="text-sm text-gray-600">Required:</span>
-                <p className="text-sm font-medium">{matchingBreakdown.education.required}</p>
-              </div>
-              <div>
-                <span className="text-sm text-gray-600">Your Education:</span>
-                <p className="text-sm font-medium">{matchingBreakdown.education.have}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Keywords Analysis */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              {getScoreIcon(matchingBreakdown.keywords.score)}
-              <h3 className="font-semibold">Keywords Match</h3>
-              <span className={`font-bold ${getScoreColor(matchingBreakdown.keywords.score)}`}>
-                {matchingBreakdown.keywords.score}%
-              </span>
-            </div>
-            <Progress value={matchingBreakdown.keywords.score} className="mb-3" />
-            <div className="space-y-3">
-              <p className="text-sm text-gray-600">
-                Matched {matchingBreakdown.keywords.matched.length} of {matchingBreakdown.keywords.total} key terms:
-              </p>
-              
-              {/* Matched Keywords */}
-              {matchingBreakdown.keywords.matched.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-green-600 mb-1">✓ Matched Terms:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {matchingBreakdown.keywords.matched.map((keyword) => (
-                      <Badge key={keyword} variant="secondary" className="text-xs bg-green-50 text-green-700 border-green-200">
-                        ✓ {keyword}
-                      </Badge>
-                    ))}
+              {categories.map(c => {
+                const formatted = formatReasoning(c.reasoning)
+                return (
+                  <div key={c.key} className="p-4 rounded-lg border bg-white">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{c.icon}</span>
+                        <span className="font-semibold">{c.title}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getScoreIcon(c.score)}
+                        <span className={`font-bold ${getScoreColor(c.score)}`}>{c.score}%</span>
+                      </div>
+                    </div>
+                    <Progress value={c.score} className="mb-3" />
+                    {formatted.summary && (
+                      <>
+                        <p className="text-xs text-gray-700 leading-relaxed mb-2">
+                          {formatted.summary}
+                        </p>
+                        {formatted.bullets.length > 0 && (
+                          <ul className="space-y-1 mt-2">
+                            {formatted.bullets.map((bullet, idx) => (
+                              <li key={idx} className="text-xs text-gray-600 flex items-start gap-1">
+                                <span className="text-gray-400 mt-0.5">•</span>
+                                <span>{bullet}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
-              
-              {/* Unmatched Keywords - show red flags or missing areas */}
-              {(matchingBreakdown.skills.missing.length > 0 || 
-                (enhancedScoreDetails?.redFlags && extractStringArray(enhancedScoreDetails.redFlags).length > 0)) && (
-                <div>
-                  <p className="text-xs font-medium text-orange-600 mb-1">✗ Areas Needing Improvement:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {(hasEnhancedData 
-                      ? extractStringArray(enhancedScoreDetails.redFlags).slice(0, 5) // Top 5 red flags
-                      : matchingBreakdown.skills.missing
-                    ).map((keyword) => (
-                      <Badge key={keyword} variant="secondary" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
-                        ✗ {keyword}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Match Summary Section - Actual Analysis Summary */}
-          {(job.matchingSummary || enhancedScoreDetails?.hiringRecommendation) && (
-            <div className="pt-4 border-t">
-              <h3 className="text-lg font-semibold mb-3">Match Analysis Summary</h3>
-              <div className="space-y-3">
-                <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-lg">
-                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-1" />
-                  <div className="space-y-2">
-                    <p className="text-gray-800 text-sm leading-relaxed font-medium">
-                      Hiring Recommendation:
-                    </p>
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {(() => {
-                        const recommendation = job.matchingSummary || enhancedScoreDetails?.hiringRecommendation || ""
-                        // Fix illogical "Do Not Proceed" for good scores
-                        if (job.matchingScore >= 70 && recommendation.includes("Do Not Proceed")) {
-                          return `Standard Interview Process - Overall score: ${job.matchingScore}% (Good Match)`
-                        }
-                        return recommendation
-                      })()}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Overall Score Category */}
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Match Category:</span>
-                    <Badge 
-                      variant={
-                        job.matchingScore >= 90 ? 'default' :
-                        job.matchingScore >= 80 ? 'secondary' :
-                        job.matchingScore >= 70 ? 'secondary' :
-                        job.matchingScore >= 60 ? 'outline' :
-                        'destructive'
-                      }
-                      className="capitalize"
-                    >
-                      {job.matchingScore >= 90 ? 'Exceptional' :
-                       job.matchingScore >= 80 ? 'Strong' :
-                       job.matchingScore >= 70 ? 'Good' :
-                       job.matchingScore >= 60 ? 'Fair' :
-                       job.matchingScore >= 45 ? 'Weak' : 'Poor'}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+                )
+              })}
             </div>
           )}
 
-          {/* Enhanced/Multi-Agent Insights Section */}
           {hasEnhancedData && (
-            <div className="pt-4 border-t space-y-4">
-              <h3 className="text-lg font-semibold">AI Analysis Insights</h3>
-              
-              {/* Key Strengths */}
-              {extractStringArray(enhancedScoreDetails.keyStrengths).length > 0 && (
-                <div>
-                  <h4 className="font-medium text-green-700 mb-2">Key Strengths</h4>
-                  <ul className="space-y-1">
-                    {extractStringArray(enhancedScoreDetails.keyStrengths).map((strength: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span>{strength}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            <div className="space-y-4 pt-4 border-t">
+              <h3 className="text-lg font-semibold">Interview Preparation Insights</h3>
 
-              {/* Key Weaknesses */}
-              {extractStringArray(enhancedScoreDetails.keyWeaknesses).length > 0 && (
+              {interviewFocus.length > 0 && (
                 <div>
-                  <h4 className="font-medium text-orange-700 mb-2">Areas for Improvement</h4>
+                  <h4 className="font-medium text-blue-700 mb-2">Focus Areas</h4>
                   <ul className="space-y-1">
-                    {extractStringArray(enhancedScoreDetails.keyWeaknesses).map((weakness: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm">
-                        <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span>{weakness}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Detailed Breakdown */}
-              <div>
-                <h4 className="font-medium text-gray-700 mb-3">Detailed Score Breakdown</h4>
-                <div className="space-y-3">
-                  {Object.entries(enhancedScoreDetails.breakdown || {}).map(([category, details]: [string, any]) => {
-                    const categoryName = category.replace(/([A-Z])/g, ' $1').trim()
-                    const getCategoryIcon = () => {
-                      if (category.includes('technical')) return '🛠️'
-                      if (category.includes('experience')) return '💼'
-                      if (category.includes('achievement')) return '🏆'
-                      if (category.includes('education')) return '🎓'
-                      if (category.includes('soft')) return '💬'
-                      if (category.includes('career')) return '📈'
-                      return '📊'
-                    }
-                    
-                    return (
-                      <div key={category} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">{getCategoryIcon()}</span>
-                            <span className="text-sm font-semibold capitalize">
-                              {categoryName}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <span className={`text-lg font-bold ${getScoreColor(details.score)}`}>
-                              {details.score}%
-                            </span>
-                            {details.weight && (
-                              <p className="text-xs text-gray-500">Weight: {(details.weight * 100).toFixed(0)}%</p>
-                            )}
-                          </div>
-                        </div>
-                        <Progress value={details.score} className="h-2 mb-3" />
-                        {details.reasoning && (
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-gray-700">Analysis:</p>
-                            <p className="text-xs text-gray-600 leading-relaxed">{details.reasoning}</p>
-                          </div>
-                        )}
-                        {/* Show sub-scores if available */}
-                        {details.breakdown && (
-                          <div className="mt-2 pt-2 border-t border-gray-200">
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              {Object.entries(details.breakdown).map(([subKey, subValue]: [string, any]) => (
-                                <div key={subKey} className="flex justify-between">
-                                  <span className="text-gray-600">{subKey}:</span>
-                                  <span className="font-medium">{subValue}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-                
-                {/* Overall Score Calculation */}
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-blue-900">Weighted Average Score:</span>
-                    <span className="text-lg font-bold text-blue-600">{enhancedScoreDetails.overallScore}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interview Focus Areas */}
-              {extractStringArray(enhancedScoreDetails.interviewFocus).length > 0 && (
-                <div>
-                  <h4 className="font-medium text-blue-700 mb-2">Interview Focus Areas</h4>
-                  <ul className="space-y-1">
-                    {extractStringArray(enhancedScoreDetails.interviewFocus).map((focus: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm">
+                    {interviewFocus.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
                         <span className="text-blue-500">•</span>
-                        <span>{focus}</span>
+                        <span>{item}</span>
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {(strengths.length > 0 || weaknesses.length > 0) && (
+                <div className="space-y-4">
+                  {strengths.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-green-700 mb-2">Key Strengths</h4>
+                      <ul className="space-y-1">
+                        {strengths.map((s, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                            <span>{s}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {weaknesses.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-orange-700 mb-3">Areas to Improve</h4>
+                      <div className="space-y-4">
+                        {weaknesses.map((w, i) => {
+                          // Parse and clean the weakness data
+                          const parseWeaknessText = (text: string) => {
+                            // Try to extract the main weakness, impact, and improvement plan
+                            const weaknessMatch = text.match(/"?weakness"?\s*:\s*"([^"]+)"/i)
+                            const impactMatch = text.match(/"?impact"?\s*:\s*"([^"]+)"/i)
+                            const shortTermMatch = text.match(/"?shortTerm"?\s*:\s*"([^"]+)"/i)
+                            const midTermMatch = text.match(/"?midTerm"?\s*:\s*"([^"]+)"/i)
+                            const longTermMatch = text.match(/"?longTerm"?\s*:\s*"([^"]+)"/i)
+
+                            return {
+                              weakness: weaknessMatch?.[1] || text,
+                              impact: impactMatch?.[1],
+                              shortTerm: shortTermMatch?.[1],
+                              midTerm: midTermMatch?.[1],
+                              longTerm: longTermMatch?.[1]
+                            }
+                          }
+
+                          // If the title contains JSON structure, parse it
+                          let parsedData = { weakness: w.title, impact: w.impact, shortTerm: '', midTerm: '', longTerm: '' }
+                          if (w.title.includes('"weakness"') || w.title.includes('"impact"')) {
+                            parsedData = parseWeaknessText(w.title)
+                          }
+
+                          // Clean up the text
+                          const cleanText = (text?: string) => {
+                            if (!text) return ''
+                            return text
+                              .replace(/\\"/g, '"')
+                              .replace(/\\n/g, ' ')
+                              .replace(/\s+/g, ' ')
+                              .replace(/^\s*["\']|["\']?\s*$/g, '')
+                              .trim()
+                          }
+
+                          const weakness = cleanText(parsedData.weakness)
+                          const impact = cleanText(parsedData.impact || w.impact)
+                          const shortTerm = cleanText(parsedData.shortTerm || w.plan?.shortTerm)
+                          const midTerm = cleanText(parsedData.midTerm || w.plan?.midTerm)
+                          const longTerm = cleanText(parsedData.longTerm || w.plan?.longTerm)
+
+                          return (
+                            <div key={i} className="border border-orange-200 rounded-lg overflow-hidden">
+                              {/* Weakness Header */}
+                              <div className="bg-orange-50 p-3 border-b border-orange-100">
+                                <div className="flex items-start gap-2">
+                                  <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                                  <div className="font-medium text-gray-800 text-sm">
+                                    {weakness}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Impact Section */}
+                              {impact && (
+                                <div className="p-3 bg-white border-b border-orange-100">
+                                  <div className="text-xs">
+                                    <span className="font-semibold text-gray-700">Impact</span>
+                                    <p className="text-gray-600 mt-1">{impact}</p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Improvement Plan */}
+                              {(shortTerm || midTerm || longTerm) && (
+                                <div className="p-3 bg-white">
+                                  <div className="text-xs space-y-2">
+                                    <div className="font-semibold text-gray-700 mb-2">Improvement Plan</div>
+
+                                    {shortTerm && (
+                                      <div className="pl-3 border-l-2 border-green-400">
+                                        <div className="font-medium text-green-700 mb-0.5">Short Term (1 month)</div>
+                                        <p className="text-gray-600">{shortTerm}</p>
+                                      </div>
+                                    )}
+
+                                    {midTerm && (
+                                      <div className="pl-3 border-l-2 border-yellow-400">
+                                        <div className="font-medium text-yellow-700 mb-0.5">Mid Term (3 months)</div>
+                                        <p className="text-gray-600">{midTerm}</p>
+                                      </div>
+                                    )}
+
+                                    {longTerm && (
+                                      <div className="pl-3 border-l-2 border-blue-400">
+                                        <div className="font-medium text-blue-700 mb-0.5">Long Term (6+ months)</div>
+                                        <p className="text-gray-600">{longTerm}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

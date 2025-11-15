@@ -59,12 +59,10 @@ export function LandingPage() {
   ]
 
   const benefits = [
-    "Save hours of manual job searching",
-    "Get higher-quality job matches",
     "Increase interview callback rates",
-    "Organize your entire job search",
-    "Access to premium resume tools",
-    "AI-powered career insights"
+    "Tailor resumes faster with AI assistance",
+    "Understand why you match (or don't match) each job",
+    "Track applications with notes and reminders"
   ]
 
   const stats = [
@@ -83,11 +81,13 @@ export function LandingPage() {
             <div className="max-w-4xl mx-auto text-center">
               
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-                Optimize Your
                 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {" "}Matching Score{" "}
+                  Understand Your Match,
                 </span>
-                with AI
+                {" "}Tailor Your Resume,{" "}
+                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Get Hired
+                </span>
               </h1>
               
               <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
@@ -126,7 +126,7 @@ export function LandingPage() {
                   Why Choose MyJob?
                 </h2>
                 <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                  Our AI helps you raise your matching score, tailor faster, and stay organized from search to offer.
+                  Our AI analyzes your match, tailors your resume, and keeps you organized from application to offer.
                 </p>
               </div>
               
@@ -157,10 +157,10 @@ export function LandingPage() {
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                  Boost Your Matching Score & Applications
+                  Understand Your Match & Stand Out
                 </h2>
                 <p className="text-xl text-muted-foreground">
-                  Use AI to tailor faster, apply smarter, and track everything with ease.
+                  Get AI-powered insights, tailor your resume, and track every application with ease.
                 </p>
               </div>
               
@@ -206,10 +206,10 @@ export function LandingPage() {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                Ready to boost your matching score?
+                Ready to get better matches?
               </h2>
               <p className="text-xl mb-8 opacity-90">
-                Tailor your resume and track applications with AI.
+                Analyze your compatibility, tailor your resume, and track applications with AI.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -219,7 +219,7 @@ export function LandingPage() {
                   onClick={handleGetStarted}
                   className="text-lg px-8 py-6"
                 >
-                  Start Improving Your Score
+                  Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
