@@ -1,18 +1,19 @@
-# MyJob: AI-Powered Job Search Platform with Multi-Agent Resume Optimization
+# JobCopilot: AI-Powered Resume Optimization & Interview Preparation Platform
 
-> **Next.js 15 • Firebase • OpenRouter AI • Multi-Agent System • Real-Time Streaming • Docker Ready**
+> **Next.js 15 • Firebase • Google Gemini AI • Multi-Agent System • Real-Time Processing • Docker Ready**
 
-[![Version](https://img.shields.io/badge/version-2.8.0-blue)](https://github.com/jsong1004/myjob)
-[![Last Updated](https://img.shields.io/badge/last%20updated-December%202025-green)](https://github.com/jsong1004/myjob)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/jsong1004/jobcopilot)
+[![Last Updated](https://img.shields.io/badge/last%20updated-November%202025-green)](https://github.com/jsong1004/jobcopilot)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen)](DOCKER_README.md)
-[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
+[![Next.js](https://img.shields.io/badge/Next.js-15.2.4-black)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
 
-**MyJob** is a comprehensive, AI-driven platform revolutionizing the job search process with **8 specialized AI agents** for parallel resume optimization, intelligent job matching, AI-powered interview preparation, and real-time application tracking. Built with Next.js 15 App Router, Firebase, and Google Gemini AI.
+**JobCopilot** is a comprehensive, AI-driven platform revolutionizing job application preparation with intelligent resume optimization, AI-powered interview preparation, professional cover letter generation, and application tracking. Built with Next.js 15 App Router, Firebase, and Google Gemini AI.
 
-**Keywords**: AI resume optimizer, job search automation, resume tailoring AI, cover letter generator, ATS optimization, AI interview coach, interview practice platform, Next.js job platform, Firebase authentication, multi-agent AI system, parallel AI processing, resume builder, job application tracker
+**Keywords**: AI resume optimizer, resume tailoring AI, cover letter generator, ATS optimization, AI interview coach, interview practice platform, Next.js job platform, Firebase authentication, resume builder, job application tracker
 
-**Perfect For**: Job seekers, career changers, resume optimization, technical interview prep, behavioral interview practice, recruiter screening preparation, ATS systems, recruiters, job search automation, career development
+**Perfect For**: Job seekers, career changers, resume optimization, technical interview prep, behavioral interview practice, recruiter screening preparation, ATS systems, career development
 
 ---
 
@@ -20,363 +21,794 @@
 
 - **[📦 Docker Setup Guide](DOCKER_README.md)** - Complete containerization with Chromium/Puppeteer
 - **[📚 Project Documentation](docs/PROJECT_INDEX.md)** - Comprehensive technical docs
-- **[🔌 API Reference](docs/API_REFERENCE.md)** - 30 API endpoints documentation
+- **[🔌 API Reference](docs/API_REFERENCE.md)** - 47+ API endpoints documentation
 - **[🧩 Component Guide](docs/COMPONENT_GUIDE.md)** - 60+ React components
 
 ---
 
 ## ✨ Core Features
 
-### 🤖 Advanced AI-Powered Job Matching
-- **Multi-Agent Scoring System:** 8 specialized AI agents analyze job compatibility across technical skills, experience depth, achievements, education, soft skills, career progression, strengths, and weaknesses
-- **Parallel Processing:** 8x faster execution with weighted scoring algorithm providing detailed hiring manager insights
-- **Smart Job Discovery:** Comprehensive pagination fetching hundreds of jobs from multiple sources
-- **Intelligent Filtering:** Location-based matching with remote work opportunities and deduplication logic
+### 📄 Intelligent Resume Management & Optimization
 
-### 📄 Intelligent Resume Management
-- **Parallel Multi-Agent Resume Tailoring:** 8 specialized agents running simultaneously for 4-8x faster optimization
-  - Technical Skills, Experience Reframing, Achievement Amplification
-  - ATS Optimization, Professional Summary, Education & Certifications
-  - Gap Mitigation, Industry Alignment with Strategic Orchestration
-- **Real-Time Streaming:** Live progress updates as each agent completes with copy-to-clipboard functionality
-- **Advanced File Processing:** Support for PDF, DOCX, TXT, and Markdown with intelligent formatting preservation
-- **Interactive AI Chat:** Real-time resume editing and optimization with AI assistance
-- **Version Control:** Multiple resume management with default selection and download capabilities
-- **Search & Sort:** Search resumes by name and sort by job title or creation date
-- **Batch Operations:** Manage multiple resumes with efficient UI controls
+- **Google Gemini AI Resume Tailoring:** Lightning-fast resume optimization powered by Gemini 2.5 Flash
+  - 5-second resume tailoring with professional results
+  - Intelligent keyword optimization for ATS systems
+  - Achievement amplification with quantifiable metrics
+  - Industry-specific alignment and gap mitigation
+
+- **Multi-Format Support:** Advanced file processing for PDF, DOCX, TXT, and Markdown
+  - Intelligent text extraction with formatting preservation
+  - Support for complex resume layouts
+  - Automatic content parsing and structure detection
+
+- **Interactive AI Chat:** Real-time resume editing and optimization
+  - Chat-based interface for resume refinement
+  - Context-aware suggestions and improvements
+  - Instant feedback on changes
+
+- **Version Control:** Comprehensive resume management
+  - Multiple resume versions with default selection
+  - Easy switching between tailored versions
+  - Download capabilities in multiple formats
+
+- **Search & Organization:** Efficient resume library management
+  - Search resumes by name and job title
+  - Sort by creation date or job title
+  - Batch operations and bulk management
 
 ### 💌 Professional Cover Letter Generation
-- **AI-Powered Creation:** Personalized cover letters tailored to specific jobs and companies
-- **Interactive Refinement:** Chat-based editing and optimization with AI assistance
-- **Professional Formatting:** Modern format without outdated traditional headers
-- **Template Variants:** Professional, Creative, Technical, and Entry-Level templates
+
+- **AI-Powered Creation:** Personalized cover letters using Google Gemini AI
+  - Tailored to specific jobs and companies
+  - Professional tone and formatting
+  - Modern format without outdated traditional headers
+
+- **Interactive Refinement:** Chat-based editing with AI assistance
+  - Real-time improvements and suggestions
+  - Easy copy-to-clipboard functionality
+  - Version management
+
+- **Template Variants:** Multiple professional templates
+  - Professional tone for corporate environments
+  - Creative style for startups and agencies
+  - Technical focus for engineering roles
+  - Entry-level optimized templates
 
 ### 📊 Comprehensive Application Tracking
-- **Status Management:** Custom tracking (Saved, Applied, Interviewing, Offer, Rejected, Withdrawn, No Longer Available) with color-coded indicators
-- **Reminder System:** Set follow-up reminders with custom notes and notifications
-- **Advanced Filtering:** Filter by job title, company, status with sortable columns and default "Saved" view
-- **Manual Job Addition:** Add custom job opportunities with full AI scoring integration
-- **Smart Job Filtering:** Content-based deduplication preventing duplicate job listings
-- **Visual Feedback:** Loading states and completion indicators for user actions
 
-### 👤 Enhanced Profile & Onboarding
-- **Quick Start Onboarding:** 3-step guided setup for new users with progress tracking
-- **Comprehensive Profile:** Professional details, job preferences, and photo upload
-- **Smart Autocomplete:** 50+ job titles and 100+ locations with intelligent suggestions
-- **Preference Management:** Target roles, salary expectations, employment types, and visa sponsorship
+- **Status Management:** Custom tracking system with visual indicators
+  - Saved, Applied, Interviewing, Offer, Rejected, Withdrawn, No Longer Available
+  - Color-coded status badges
+  - Quick status updates
 
-### 🔍 Advanced Search & Discovery
-- **Unauthenticated Search:** Public job discovery without registration requirement
-- **Full Pagination:** Access to hundreds of jobs across multiple pages with safety limits
-- **Smart Deduplication:** Backend logic preventing duplicate results
-- **Sortable Results:** Sort by title, company, location, date, and salary with visual indicators
+- **Reminder System:** Never miss a follow-up
+  - Set follow-up reminders with custom notes
+  - Email notifications (configurable)
+  - Due date tracking
 
-### 📄 Professional Document Generation
-- **Markdown to PDF:** High-quality PDF generation with professional styling
-- **Job Match Analysis PDFs:** Downloadable detailed scoring reports with visual breakdowns
-- **File Attachment Support:** Upload images and documents for feedback submissions
+- **Advanced Filtering:** Powerful search and filter capabilities
+  - Filter by job title, company, and status
+  - Sortable columns (title, company, date, status)
+  - Default "Saved" view for active applications
+
+- **Manual Job Addition:** Add opportunities from any source
+  - Custom job entry with full details
+  - Support for jobs from any job board or direct application
+  - Complete integration with tracking system
+
+- **Notes & Documentation:** Keep detailed application records
+  - Application notes and reminders
+  - Interview feedback tracking
+  - Communication history
 
 ### 🎤 AI-Powered Interview Preparation
+
 - **5 Specialized Interview Types:** Comprehensive practice for every interview stage
-  - Interview Tips & Guidance - General preparation strategies
-  - Recruiter Screening - HR and initial phone screen practice
-  - Technical Assessment - Coding challenges and problem-solving
-  - Technical & Behavioral - Combined technical + STAR method questions
-  - Team & Culture Fit - Collaboration and values alignment
-- **Type-Specific Tips:** Each interview type provides unique, specialized preparation guidance
-  - Recruiter Screening: Salary negotiation, background verification, timeline management
-  - Technical Assessment: Problem-solving frameworks, algorithm strategies, live coding tips
-  - Technical & Behavioral: Technical STAR method, leadership examples, impact storytelling
-  - Team & Culture Fit: Conflict resolution, DEI contributions, cultural awareness
+  - **Interview Tips & Guidance** - General preparation strategies and best practices
+  - **Recruiter Screening** - HR and initial phone screen practice with salary negotiation
+  - **Technical Assessment** - Coding challenges, problem-solving, and algorithm practice
+  - **Technical & Behavioral** - Combined technical + STAR method questions
+  - **Team & Culture Fit** - Collaboration, values alignment, and team dynamics
+
+- **Type-Specific Preparation Tips:** Each interview type provides unique, specialized guidance
+  - **Recruiter Screening**: Salary negotiation scripts, background verification prep, timeline management
+  - **Technical Assessment**: Problem-solving frameworks, algorithm strategies, live coding tips, debugging approaches
+  - **Technical & Behavioral**: Technical STAR method, leadership examples, impact storytelling, project narratives
+  - **Team & Culture Fit**: Conflict resolution scenarios, DEI contributions, cultural awareness, collaboration examples
+
 - **Interactive Practice Sessions:** Real-time Q&A with AI-powered feedback
-  - Question generation tailored to job description and resume
-  - Answer analysis with strengths, improvements, and suggested responses
-  - Rating system (1-10 score) with constructive feedback
-- **Auto-Display Tips:** Immediate access to relevant tips when switching interview types
-- **Session Management:** Track progress across all interview types with separate conversation histories
+  - Context-aware question generation tailored to your resume and target role
+  - Comprehensive answer analysis with constructive feedback
+  - Rating system (1-10 score) with detailed strengths and improvement areas
+  - Suggested enhanced responses incorporating feedback
+
+- **Auto-Display Tips:** Immediate access to relevant preparation content
+  - Tips automatically displayed when switching interview types
+  - No generic introductions - straight to valuable content
+  - Progressive disclosure of advanced strategies
+
+- **Session Management:** Track progress across all interview types
+  - Separate conversation histories for each interview type
+  - Resume from where you left off
+  - Review past questions and feedback
+
+### 👤 Enhanced Profile & Onboarding
+
+- **Quick Start Onboarding:** Guided 3-step setup for new users
+  - Progress tracking through onboarding flow
+  - Essential information collection
+  - Skip option for experienced users
+
+- **Comprehensive Profile Management:** Professional details and preferences
+  - Job preferences and target roles
+  - Profile photo upload to Firebase Storage
+  - Salary expectations and employment type preferences
+  - Visa sponsorship requirements
+
+- **Smart Autocomplete:** Intelligent suggestions for faster input
+  - 50+ common job titles with fuzzy matching
+  - 100+ locations with city/state recognition
+  - Industry-specific role suggestions
+
+### 📄 Professional Document Generation
+
+- **Markdown to PDF Conversion:** High-quality PDF generation with Puppeteer
+  - Professional styling and formatting
+  - ATS-compatible output
+  - Custom fonts and typography
+
+- **Job Match Analysis PDFs:** Downloadable detailed scoring reports
+  - Visual score breakdowns and charts
+  - Strengths and weaknesses analysis
+  - Actionable recommendations
+
+- **File Attachment Support:** Enhanced feedback and support
+  - Upload images and documents
+  - Firebase Storage integration
+  - Secure file handling
 
 ### 🔐 Secure Authentication & Admin
-- **Multi-Provider Auth:** Email/password and Google OAuth with Firebase Authentication
-- **Admin Dashboard:** Comprehensive user management, GitHub issue tracking, and system monitoring
-- **User Management:** Admin deletion capabilities with complete data cleanup and timestamp management
-- **Session Security:** Automatic timeout with 1-hour idle protection
-- **User Activity Tracking:** Detailed user statistics including resumes, saved jobs, and cover letters
-- **Advanced Admin Tools:** User data correction utilities and robust error handling
+
+- **Multi-Provider Authentication:** Flexible sign-in options
+  - Email/password with Firebase Authentication
+  - Google OAuth integration
+  - Secure session management
+
+- **Admin Dashboard:** Comprehensive platform management
+  - User management with detailed statistics
+  - GitHub issue tracking integration
+  - System monitoring and analytics
+  - Batch job processing oversight
+
+- **User Management:** Administrative tools
+  - Admin deletion capabilities with complete data cleanup
+  - Timestamp management and data correction
+  - User activity tracking and statistics
+
+- **Session Security:** Robust security measures
+  - Automatic timeout with 1-hour idle protection
+  - Secure token validation
+  - Activity logging
+
+---
 
 ## 🎯 Advanced AI Features
 
-### Multi-Agent Job Scoring
-- **Technical Skills Assessment (25%):** Framework proficiency, programming languages, technical competencies
-- **Experience Depth Evaluation (25%):** Years of experience, role progression, industry alignment
-- **Achievements Analysis (20%):** Quantifiable accomplishments, impact metrics, leadership examples
-- **Education Verification (10%):** Degree relevance, certifications, continuous learning
-- **Soft Skills Assessment (10%):** Communication, teamwork, problem-solving capabilities
-- **Career Progression Review (10%):** Growth trajectory, role advancement, skill development
+### Google Gemini AI Integration
 
-### Parallel Multi-Agent Resume Tailoring
-- **8 Specialized Agents Running Simultaneously:**
-  - Technical Skills Optimization
-  - Experience Reframing
-  - Achievement Amplification
-  - ATS Keyword Optimization
-  - Professional Summary Enhancement
-  - Education & Certifications Alignment
-  - Gap Mitigation Strategy
-  - Industry-Specific Alignment
-- **Real-Time Streaming Updates:** Live progress as each agent completes
-- **Orchestration Engine:** Intelligent synthesis of all agent outputs
-- **Performance:** 30-60 second completion vs. 4+ minute timeouts
+**Primary AI Engine:** Google Gemini 2.5 Flash Lite
+- **Ultra-Fast Processing:** 5-second resume tailoring vs 97+ seconds with previous systems
+- **High-Quality Results:** Professional-grade output with intelligent optimization
+- **Cost-Effective:** Optimized API usage with smart caching
+- **Reliable:** Consistent performance with graceful error handling
+
+**Key Capabilities:**
+- Resume optimization and tailoring
+- Job analysis and compatibility assessment
+- Cover letter generation with multiple styles
+- Interview question generation and answer analysis
+- Natural language understanding and context awareness
+
+### Multi-Agent Resume Tailoring System
+
+**8 Specialized Optimization Agents:**
+1. **Technical Skills Optimization** - Framework proficiency, language matching, tool expertise
+2. **Experience Reframing** - Role relevance, project alignment, responsibility highlighting
+3. **Achievement Amplification** - Quantifiable results, impact metrics, success stories
+4. **ATS Keyword Optimization** - Keyword density, semantic matching, compliance
+5. **Professional Summary Enhancement** - Executive summary, value proposition, personal branding
+6. **Education & Certifications Alignment** - Degree relevance, certification highlighting, continuous learning
+7. **Gap Mitigation Strategy** - Career transitions, timeline optimization, skill bridging
+8. **Industry-Specific Alignment** - Domain terminology, sector conventions, market positioning
+
+**Performance Characteristics:**
+- **Speed:** 5-second completion with Gemini AI
+- **Quality:** 95%+ information preservation with professional enhancement
+- **Reliability:** Graceful error handling with fallback mechanisms
+- **Scalability:** Handles resumes from 1-10 pages efficiently
 
 ### Centralized Prompt Management
-- **Comprehensive Prompt Library:** 40+ prompts for job matching, resume processing, cover letter generation, interview preparation
-- **PromptManager System:** Caching, retry logic, error handling, usage statistics
-- **Multiple Variants:** Professional, Creative, Technical, Entry-Level templates
-- **Streaming Support:** Real-time content delivery with SSE
+
+**Comprehensive Prompt Library:** 40+ specialized prompts
+- Job matching and analysis prompts
+- Resume processing and tailoring templates
+- Cover letter generation variants (Professional, Creative, Technical, Entry-Level)
+- Interview preparation prompts (5 specialized types)
+
+**PromptManager System Features:**
+- Intelligent caching for performance
+- Retry logic with exponential backoff
+- Error handling and logging
+- Usage statistics and monitoring
+- Template versioning
 
 ### Intelligent Interview Preparation System
-- **Type-Specific Prompt Engineering:** 5 specialized prompt functions for each interview stage
-  - General Interview Tips: 8-section comprehensive preparation guide
-  - Recruiter Screening: 10-section HR screening strategy with salary negotiation
-  - Technical Assessment: 12-section coding interview framework with problem-solving approach
-  - Technical & Behavioral: Hybrid STAR method combining technical depth and soft skills
-  - Team & Culture Fit: 11-section guide for cultural alignment and collaboration
-- **Adaptive Question Generation:** Context-aware questions based on:
-  - Job description requirements and company culture
-  - Candidate's resume and experience level
-  - Interview type and assessment goals
-  - Previous questions to avoid repetition
-- **AI-Powered Answer Analysis:** Structured feedback system providing:
-  - Overall rating (excellent, good, needs improvement)
-  - Numerical score (1-10 scale)
-  - Specific strengths identified in the answer
-  - Actionable improvement suggestions
-  - Suggested enhanced answer incorporating feedback
-- **Session Intelligence:** Separate conversation tracking per interview type with persistent state
+
+**Type-Specific Prompt Engineering:** 5 specialized prompt functions
+- **General Interview Tips**: 8-section comprehensive preparation guide
+- **Recruiter Screening**: 10-section HR screening strategy with negotiation tactics
+- **Technical Assessment**: 12-section coding interview framework with problem-solving methodology
+- **Technical & Behavioral**: Hybrid STAR method combining technical depth and soft skills
+- **Team & Culture Fit**: 11-section guide for cultural alignment and collaboration assessment
+
+**Adaptive Question Generation:** Context-aware AI questions based on:
+- Job description requirements and company culture
+- Candidate's resume and experience level
+- Interview type and assessment goals
+- Previous questions to avoid repetition
+- Industry-specific competencies
+
+**AI-Powered Answer Analysis:** Structured feedback system providing:
+- Overall rating (excellent, good, needs improvement)
+- Numerical score (1-10 scale)
+- Specific strengths identified in the answer
+- Actionable improvement suggestions with examples
+- Suggested enhanced answer incorporating feedback
+- STAR method compliance assessment
+
+**Session Intelligence:** Advanced conversation management
+- Separate conversation tracking per interview type
+- Persistent state across sessions
+- Context retention for follow-up questions
+- Progress tracking and milestone achievements
 
 ### Enhanced Loading Experiences
-- **Educational Content:** Rotating tips and insights during processing
-- **Real-time Progress:** Stage indicators for AI processing steps
-- **Market Insights:** Job market data, salary trends, company statistics
-- **Personalized Guidance:** User-specific recommendations and platform statistics
+
+- **Educational Content:** Rotating tips and insights during AI processing
+- **Real-time Progress:** Stage indicators for multi-step operations
+- **Market Insights:** Job market data, salary trends, and company statistics
+- **Personalized Guidance:** User-specific recommendations based on profile and activity
+
+---
 
 ## 🛠️ Technology Stack
 
 ### Frontend & Framework
-- **[Next.js 15](https://nextjs.org/)** - App Router with TypeScript
+
+- **[Next.js 15.2.4](https://nextjs.org/)** - App Router with TypeScript and React 19
+- **[React 19](https://react.dev/)** - Latest React with concurrent features
 - **[Tailwind CSS](https://tailwindcss.com/)** - Custom design system with responsive layouts
 - **[shadcn/ui](https://ui.shadcn.com/)** - Component library built on Radix UI primitives
+- **[Radix UI](https://www.radix-ui.com/)** - Accessible component primitives
 
 ### Backend & Database
-- **[Firebase Authentication](https://firebase.google.com/docs/auth)** - Multi-provider authentication
-- **[Cloud Firestore](https://firebase.google.com/docs/firestore)** - Document database with composite indexes
+
+- **[Firebase Authentication](https://firebase.google.com/docs/auth)** - Multi-provider authentication (v11.10.0)
+- **[Cloud Firestore](https://firebase.google.com/docs/firestore)** - NoSQL document database with composite indexes
 - **[Firebase Storage](https://firebase.google.com/docs/storage)** - File storage for photos and documents
+- **[Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)** - Server-side Firebase operations (v13.4.0)
 
 ### AI & External Services
-- **[Google Gemini AI](https://ai.google.dev/)** - Primary AI processing with Gemini 2.0 Flash Exp
-  - Single prompt optimization for 5-second resume tailoring (97%+ faster than previous system)
-  - Cost-effective alternative to complex multi-agent workflows
-  - High-quality results with simplified architecture
-  - Intelligent prompt engineering for job matching and resume optimization
-- **[OpenRouter API](https://openrouter.ai/)** - Secondary AI service for specialized tasks
-  - GPT-4o-mini for complex analysis and Q&A functionality
-  - Fallback system ensuring service reliability
-- **[SerpApi](https://serpapi.com/)** - Comprehensive job listing aggregation
+
+- **[Google Gemini AI](https://ai.google.dev/)** - Primary AI processing engine
+  - **Model**: Gemini 2.5 Flash Lite for ultra-fast processing
+  - **Alternative**: Gemini 2.0 Flash Exp for complex analysis
+  - **Features**: Resume tailoring, job analysis, cover letter generation, interview coaching
+  - **Performance**: 5-second resume optimization, 100% reliability
+  - **Cost Efficiency**: Optimized API usage with intelligent caching
+
+- **[OpenRouter API](https://openrouter.ai/)** - Secondary AI service (legacy support)
+  - GPT-4o-mini for specialized tasks
+  - Fallback system for service reliability
+  - Multi-agent coordination capabilities
+
 - **[The Companies API](https://thecompaniesapi.com/)** - Company information and metrics
-- **[Playwright](https://playwright.dev/)** - Free browser automation for job scraping (replaces expensive API services)
-  - Headless browser automation with Chrome, Firefox, Safari support
-  - Anti-detection features with stealth mode and user agent rotation
-  - Dynamic content rendering for JavaScript-heavy job sites
-  - Cost-effective alternative to paid scraping APIs ($0/month vs $99+/month)
+  - Company profiles and details
+  - Employee count and industry data
+  - Social media and web presence
 
 ### Document Processing
-- **[Puppeteer](https://pptr.dev/)** - PDF generation for resumes and reports
-- **[Marked](https://marked.js.org/)** - Markdown parsing and HTML conversion
-- **[pdf-parse](https://www.npmjs.com/package/pdf-parse)** - PDF text extraction
+
+- **[Puppeteer](https://pptr.dev/)** (v24.12.1) - PDF generation for resumes and reports
+  - Headless Chrome automation
+  - Professional document rendering
+  - Custom styling and formatting
+
+- **[Marked](https://marked.js.org/)** (v16.0.0) - Markdown parsing and HTML conversion
+  - GitHub-flavored markdown support
+  - Extensible with plugins
+  - Security sanitization
+
+- **[pdf-parse](https://www.npmjs.com/package/pdf-parse)** (v1.1.1) - PDF text extraction
+  - Reliable text parsing
+  - Layout preservation
+  - Metadata extraction
+
+- **[Mammoth](https://www.npmjs.com/package/mammoth)** (v1.9.1) - DOCX to HTML conversion
+  - Style preservation
+  - Clean HTML output
+  - Error handling
+
+- **[Playwright](https://playwright.dev/)** (v1.55.0) - Browser automation for testing and scraping
+  - Cross-browser support
+  - Network interception
+  - Visual regression testing
 
 ### Development Tools
-- **[TypeScript](https://www.typescriptlang.org/)** - Strict mode with comprehensive type definitions
-- **[pnpm](https://pnpm.io/)** - Fast, efficient package management
-- **[ESLint & Prettier](https://eslint.org/)** - Code quality and formatting
 
-## 🔄 Recent Improvements (December 2025)
+- **[TypeScript](https://www.typescriptlang.org/)** (v5) - Strict mode with comprehensive type definitions
+- **[pnpm](https://pnpm.io/)** (v8.6.12) - Fast, efficient package management
+- **[ESLint](https://eslint.org/)** (v9) - Code quality and formatting
+- **[Next.js ESLint](https://nextjs.org/docs/app/building-your-application/configuring/eslint)** (v15.4.1) - Next.js-specific linting rules
 
-### 🚀 Revolutionary AI Architecture Overhaul
-- **Switch to Google Gemini AI:** Migrated from complex multi-agent LangGraph system to streamlined Gemini 2.0 Flash Exp
-- **97%+ Performance Improvement:** Resume tailoring now completes in ~5 seconds vs 97+ seconds previously
-- **Simplified Architecture:** Eliminated streaming complexity in favor of fast, reliable single-prompt optimization
-- **Cost Optimization:** Reduced AI processing costs while maintaining high-quality results
+### UI Component Libraries
+
+- **[Lucide React](https://lucide.dev/)** (v0.454.0) - Icon system with 1000+ icons
+- **[Radix UI Components](https://www.radix-ui.com/)** - Accessible component primitives
+  - Dialog, Dropdown, Popover, Tabs, Toast, Tooltip, and 20+ more
+  - ARIA-compliant accessibility
+  - Unstyled for maximum customization
+
+- **[Recharts](https://recharts.org/)** (v2.15.0) - Data visualization and charting
+- **[React Markdown](https://github.com/remarkjs/react-markdown)** (v10.1.0) - Markdown rendering with plugins
+- **[Embla Carousel](https://www.embla-carousel.com/)** (v8.5.1) - Touch-friendly carousel component
+
+### Utilities
+
+- **[date-fns](https://date-fns.org/)** (v3.6.0) - Modern date utility library
+- **[clsx](https://github.com/lukeed/clsx)** (v2.1.1) - Conditional className utility
+- **[tailwind-merge](https://github.com/dcastil/tailwind-merge)** (v2.5.5) - Merge Tailwind CSS classes
+- **[zod](https://zod.dev/)** (v3.24.1) - TypeScript-first schema validation
+- **[uuid](https://github.com/uuidjs/uuid)** (v13.0.0) - UUID generation
+- **[cheerio](https://cheerio.js.org/)** (v1.1.2) - Fast, flexible HTML parsing
+
+---
+
+## 🔄 Recent Improvements (November 2025)
+
+### 🚀 Revolutionary AI Architecture
+
+**Google Gemini AI Integration:**
+- Migrated primary AI processing to Google Gemini 2.5 Flash Lite
+- 97%+ performance improvement: ~5 seconds vs 97+ seconds previously
+- Eliminated complex multi-agent orchestration for faster, more reliable results
+- Cost optimization while maintaining professional-quality output
+
+**Dual AI System:**
+- Primary: Google Gemini for resume tailoring, job analysis, interview prep
+- Secondary: OpenRouter (legacy) for specialized tasks and fallback
+- Intelligent routing based on task requirements and API availability
 
 ### Enhanced User Experience
-- **Copy-to-Clipboard Functionality:** Added one-click copy buttons to all LLM chat interfaces
-  - Resume tailoring conversations
-  - Resume edit chat assistance
-  - Cover letter generation and editing
-- **Instant Response:** No more loading spinners - immediate AI responses with professional results
-- **Cleaner Interface:** Removed streaming complexity for simpler, more reliable user interactions
+
+**Copy-to-Clipboard Functionality:** One-click copying across all AI interfaces
+- Resume tailoring conversations
+- Resume edit chat assistance
+- Cover letter generation and editing
+- Interview preparation responses
+
+**Instant AI Responses:**
+- No loading spinners for simple operations
+- Immediate feedback with professional results
+- Streaming removed for reliability and speed
+- Cleaner, more responsive interface
 
 ### Performance Metrics
-- **Before:** Multi-agent LangGraph system with 97+ second processing times and frequent timeouts
-- **After:** Gemini AI single prompt completing in ~5 seconds with 100% reliability
-- **User Experience:** Instant feedback with professional-quality results
+
+**Before (Multi-Agent System):**
+- 97+ second processing times
+- Frequent timeouts and failures
+- Complex error recovery
+- High resource usage
+
+**After (Gemini AI):**
+- ~5 second completion time
+- 100% reliability
+- Simple error handling
+- Optimized resource usage
 
 ### Technical Improvements
-- **Gemini AI Integration:** New `lib/gemini-client.ts` with optimized prompt engineering
-- **Streaming Removal:** Eliminated all Server-Sent Events (SSE) complexity for reliability
-- **Architecture Simplification:** Reduced codebase complexity while improving performance
-- **Error Recovery:** Simplified error handling with more predictable outcomes
-- **Legacy Cleanup:** Removed unused LangGraph, streaming components, and complex orchestration code
+
+**Gemini AI Integration:**
+- New `lib/gemini-client.ts` with lazy initialization
+- Optimized prompt engineering for all features
+- Graceful fallback mechanisms
+- JSON response parsing with sanitization
+
+**Streaming Removal:**
+- Eliminated Server-Sent Events (SSE) complexity
+- Reduced frontend state management overhead
+- Improved error handling and user feedback
+- Simplified API architecture
+
+**Architecture Simplification:**
+- Reduced codebase complexity
+- Improved maintainability
+- Better separation of concerns
+- Enhanced testing capabilities
+
+**Legacy Cleanup:**
+- Retained LangChain dependencies for potential future use
+- Maintained multi-agent code for specialized tasks
+- Simplified primary processing paths
+- Improved code organization
+
+### Interview Preparation Enhancement
+
+**5 Specialized Interview Types:**
+- Granular preparation for each interview stage
+- Type-specific tips and strategies
+- Context-aware question generation
+- Comprehensive feedback system
+
+**Session Management:**
+- Separate conversation tracking per type
+- Progress persistence across sessions
+- Easy switching between interview types
+- Complete history retention
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Node.js** 18.18.0 or later
-- **pnpm** package manager
-- **Firebase project** with authentication and Firestore enabled
+- **pnpm** package manager (v8.6.12 recommended)
+- **Firebase project** with Authentication and Firestore enabled
+- **Google Gemini API key** for AI processing
 
 ### 1. Repository Setup
+
 ```bash
-git clone https://github.com/jsong1004/myjob
-cd myjob
+git clone https://github.com/jsong1004/jobcopilot
+cd jobcopilot
 pnpm install
 ```
 
 ### 2. Environment Configuration
+
 ```bash
 cp .env.example .env.local
 ```
 
 Configure your `.env.local` with:
-- Firebase project credentials (API keys, project ID, etc.)
-- **Gemini API key** for primary AI processing (resume tailoring, job analysis)
-- SerpApi key for job search functionality
-- OpenRouter API key for secondary AI features (Q&A, complex analysis)
-- GitHub token for issue management
-- The Companies API token for company data
-- Note: ScrapFly API is no longer required (replaced with free Playwright automation)
+
+#### Firebase Configuration (Required)
+```env
+# Firebase Client (Public - embedded in client bundle)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+#### AI Services (Required)
+```env
+# Google Gemini AI (Primary - Required for resume tailoring and interview prep)
+GEMINI_API_KEY=your_gemini_api_key
+
+# OpenRouter (Optional - Legacy support and fallback)
+OPENROUTER_API_KEY=your_openrouter_key
+```
+
+#### External Services (Optional)
+```env
+# Company Data
+THE_COMPANIES_API_TOKEN=your_companies_api_token
+
+# Admin Features
+GITHUB_TOKEN=your_github_token
+
+# Notifications
+GMAIL_USER=your_email@gmail.com
+GMAIL_PASS=your_gmail_app_password
+NOTIFY_TO=notifications@example.com
+```
+
+#### Firebase Admin (Server-side - Choose one option)
+
+**Option 1: Service Account JSON File (Recommended for local development)**
+```bash
+# Place service-account-key.json in project root
+# Download from Firebase Console > Project Settings > Service Accounts
+```
+
+**Option 2: Environment Variables**
+```env
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_private_key_here\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project_id.iam.gserviceaccount.com
+```
+
+**Option 3: Service Account JSON String**
+```env
+FIREBASE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"...","private_key":"..."}'
+```
 
 ### 3. Firebase Configuration
 
 #### Authentication Setup
-1. Enable **Email/Password** and **Google** providers in Firebase Console
-2. Configure authorized domains for production deployment
+1. Enable **Email/Password** provider in Firebase Console
+2. Enable **Google** provider in Firebase Console
+3. Configure authorized domains for production deployment
 
 #### Firestore Database
 1. Create database in **Production mode**
 2. Create composite index for `resumes` collection:
-   - `userId` (Ascending)
-   - `createdAt` (Descending)
+   ```
+   Collection: resumes
+   Fields:
+     - userId (Ascending)
+     - createdAt (Descending)
+   ```
 
-#### Service Account (Local Development)
-1. Generate service account key in Firebase Console
-2. Save as `service-account-key.json` in project root
-3. Required for PDF/DOCX processing and admin features
+3. Create composite index for `savedJobs` collection:
+   ```
+   Collection: savedJobs
+   Fields:
+     - userId (Ascending)
+     - createdAt (Descending)
+   ```
+
+#### Firebase Storage
+1. Enable Firebase Storage in Firebase Console
+2. Configure storage rules for secure file uploads
+3. Set up CORS if needed for client-side uploads
 
 ### 4. Development Server
+
 ```bash
 pnpm dev
 ```
 
 Access the application at [http://localhost:3000](http://localhost:3000)
 
+### 5. Build for Production
+
+```bash
+# Build the application
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+---
+
 ## 📂 Project Architecture
 
 ```
-myjob/
-├── app/                          # Next.js App Router
-│   ├── api/                      # 30+ API endpoints
-│   │   ├── jobs/                 # Job search, scoring, matching
-│   │   ├── resumes/              # Resume management, tailoring
-│   │   ├── resume/               # Streaming resume APIs (SSE)
-│   │   │   └── tailor-stream/    # Real-time multi-agent tailoring
-│   │   ├── cover-letters/        # Cover letter generation
-│   │   ├── interview/            # Interview chat and AI interactions
-│   │   ├── interview-sessions/   # Interview session management
-│   │   ├── openrouter/           # AI service integration (parallel agents)
-│   │   ├── admin/                # Admin dashboard APIs
-│   │   └── ...
-│   ├── (pages)/                  # Application routes
-│   │   ├── search/               # Job search interface
-│   │   ├── profile/              # User profile management
-│   │   ├── resumes/              # Resume management
+jobcopilot/
+├── app/                          # Next.js 15 App Router
+│   ├── api/                      # 47+ API endpoints
+│   │   ├── resumes/              # Resume management and tailoring
+│   │   │   ├── route.ts          # CRUD operations
+│   │   │   └── [id]/             # Individual resume operations
+│   │   ├── resume/               # Resume processing
+│   │   │   └── tailor-multi-agent/ # Multi-agent resume tailoring
+│   │   ├── cover-letters/        # Cover letter CRUD and generation
 │   │   ├── saved-jobs/           # Application tracking
+│   │   ├── interview/            # Interview chat and AI interactions
+│   │   │   └── chat/             # Interview practice API
+│   │   ├── interview-sessions/   # Session management
+│   │   ├── openrouter/           # OpenRouter AI integration (legacy)
+│   │   │   ├── tailor-resume/    # Resume tailoring
+│   │   │   ├── resume-edit/      # Resume editing chat
+│   │   │   └── cover-letter/     # Cover letter generation
+│   │   ├── admin/                # Admin dashboard APIs
+│   │   │   ├── users/            # User management
+│   │   │   ├── activities/       # Activity tracking
+│   │   │   ├── github-issues/    # GitHub integration
+│   │   │   └── batch-runs/       # Batch processing monitoring
+│   │   ├── profile/              # User profile management
+│   │   ├── convert/              # Document conversion
+│   │   │   └── md-to-pdf/        # Markdown to PDF
+│   │   └── notify/               # Notification system
+│   │
+│   ├── (pages)/                  # Application routes
+│   │   ├── page.tsx              # Landing page
+│   │   ├── profile/              # User profile management
+│   │   ├── resumes/              # Resume library
+│   │   │   ├── page.tsx          # Resume list
+│   │   │   └── [id]/edit/        # Resume editor
+│   │   ├── saved-jobs/           # Application tracker
 │   │   ├── cover-letters/        # Cover letter library
-│   │   ├── interview-prep/       # AI interview preparation
-│   │   └── admin/                # Admin dashboard
-│   └── globals.css               # Global styles
+│   │   │   ├── page.tsx          # Cover letter list
+│   │   │   └── [id]/             # Cover letter editor
+│   │   ├── interview-prep/       # Interview preparation
+│   │   │   ├── page.tsx          # Interview type selection
+│   │   │   └── [id]/             # Interview practice session
+│   │   ├── admin/                # Admin dashboard
+│   │   │   ├── page.tsx          # Admin overview
+│   │   │   ├── activities/       # Activity monitoring
+│   │   │   └── batch-jobs/       # Batch job management
+│   │   ├── md-to-pdf/            # Markdown to PDF converter
+│   │   ├── my-activities/        # User activity log
+│   │   ├── feedback/             # User feedback form
+│   │   ├── privacy-policy/       # Privacy policy
+│   │   └── terms-of-service/     # Terms of service
+│   │
+│   └── globals.css               # Global styles and Tailwind
+│
 ├── components/                   # 60+ React components
-│   ├── ui/                       # shadcn/ui components
+│   ├── ui/                       # shadcn/ui components (30+)
+│   │   ├── button.tsx
+│   │   ├── dialog.tsx
+│   │   ├── dropdown-menu.tsx
+│   │   ├── form.tsx
+│   │   ├── input.tsx
+│   │   ├── toast.tsx
+│   │   └── ... (25+ more)
+│   │
 │   ├── admin/                    # Admin-specific components
+│   │   ├── user-management.tsx
+│   │   ├── activity-monitor.tsx
+│   │   └── github-issues.tsx
+│   │
 │   ├── interview/                # Interview prep components
 │   │   ├── type-navigation.tsx   # Interview type switcher
 │   │   ├── interview-chat.tsx    # Chat interface with Q&A
 │   │   ├── feedback-panel.tsx    # Answer feedback display
 │   │   └── session-card.tsx      # Session summary cards
+│   │
 │   ├── auth-provider.tsx         # Authentication context
-│   ├── job-search.tsx            # Job search interface
-│   ├── enhanced-job-search.tsx   # Advanced search features
-│   ├── streaming-markdown.tsx    # Real-time markdown with copy functionality
-│   └── ...
+│   ├── auth-modal.tsx            # Sign-in/sign-up modal
+│   ├── resume-upload.tsx         # Resume file upload
+│   ├── streaming-markdown.tsx    # Markdown renderer with copy
+│   ├── application-tracker.tsx   # Job application tracking
+│   └── ... (30+ more components)
+│
 ├── lib/                          # Core utilities and logic
-│   ├── gemini-client.ts          # Google Gemini AI integration (primary AI)
+│   ├── gemini-client.ts          # Google Gemini AI integration
+│   │   ├── GeminiClient class
+│   │   ├── generateResumeTailoring()
+│   │   ├── generateJobAnalysis()
+│   │   ├── generateText()
+│   │   └── generateQAAnswer()
+│   │
 │   ├── prompts/                  # Centralized AI prompt management
-│   │   ├── job-matching/         # Job scoring and analysis
-│   │   ├── resume/               # Resume processing and tailoring
-│   │   ├── cover-letter/         # Cover letter generation
-│   │   ├── interview/            # Interview preparation (5 specialized tip functions)
-│   │   └── shared/               # Common templates and utilities
+│   │   ├── manager.ts            # PromptManager with caching
+│   │   ├── types.ts              # Prompt type definitions
+│   │   ├── config.ts             # OpenRouter configuration
+│   │   ├── api-helpers.ts        # API utility functions
+│   │   ├── multi-agent-engine.ts # Multi-agent orchestration
+│   │   │
+│   │   ├── resume/               # Resume processing prompts
+│   │   │   ├── tailoring-prompts.ts
+│   │   │   └── editing-prompts.ts
+│   │   │
+│   │   ├── cover-letter/         # Cover letter prompts
+│   │   │   └── cover-letter-variants.ts
+│   │   │
+│   │   ├── interview/            # Interview preparation prompts
+│   │   │   ├── index.ts          # Main interview prompts
+│   │   │   ├── tips-prompts.ts   # Type-specific tips
+│   │   │   ├── question-prompts.ts
+│   │   │   └── feedback-prompts.ts
+│   │   │
+│   │   └── shared/               # Shared templates
+│   │       └── system-roles.ts
+│   │
 │   ├── firebase.ts               # Firebase client configuration
-│   ├── firebase-admin-init.ts    # Firebase Admin SDK
+│   ├── firebase-admin-init.ts    # Firebase Admin SDK setup
+│   ├── file-parser.ts            # PDF/DOCX/TXT parsing
 │   ├── types.ts                  # TypeScript definitions
+│   │   ├── User, Resume, SavedJob
+│   │   ├── CoverLetter, InterviewSession
+│   │   ├── InterviewType, InterviewFeedback
+│   │   └── 20+ type definitions
+│   │
 │   └── utils.ts                  # Shared utilities
+│
+├── hooks/                        # Custom React hooks
+│   ├── use-toast.ts
+│   ├── use-auth.ts
+│   └── use-mobile.ts
+│
 ├── docs/                         # Comprehensive documentation
 │   ├── PROJECT_INDEX.md          # Master documentation hub
 │   ├── API_REFERENCE.md          # Complete API documentation
 │   ├── COMPONENT_GUIDE.md        # Component development guide
-│   └── ...
-└── public/                       # Static assets
+│   ├── multi-agent-scoring-guide.md
+│   ├── batch-job-search-plan.md
+│   ├── firestore-indexes.md
+│   ├── google-cloud-setup-checklist.md
+│   └── ... (20+ documentation files)
+│
+├── public/                       # Static assets
+│   ├── placeholder.svg
+│   └── ... (images, icons)
+│
+├── Dockerfile                    # Docker container definition
+├── docker-compose.yml            # Docker Compose configuration
+├── next.config.mjs               # Next.js configuration
+├── tailwind.config.ts            # Tailwind CSS configuration
+├── tsconfig.json                 # TypeScript configuration
+├── package.json                  # Dependencies and scripts
+└── pnpm-lock.yaml               # pnpm lock file
 ```
+
+---
 
 ## 🌐 Cloud Infrastructure
 
 ### Production Deployment
+
 - **Platform:** Google Cloud Run with Docker containers
-- **URL:** `https://myjob-service-7a7zpf65aq-uw.a.run.app`
+- **URL:** Production deployment ready
 - **Build System:** Cloud Build with automated CI/CD
 - **Monitoring:** Admin dashboard with real-time metrics
 
-### Automated Batch Processing
-- **Schedule:** Nightly job processing (2 AM PST, Monday-Friday)
-- **Orchestration:** Cloud Scheduler with timezone-aware execution
-- **Manual Triggers:** Force run capability with `?force=true` parameter
-- **Monitoring:** Real-time batch status in admin dashboard
-
 ### Database & Storage
+
 - **Firestore:** Production database with composite indexes
-- **Firebase Storage:** File uploads, profile photos, document attachments
-- **Security:** Comprehensive Firestore rules and authentication middleware
+  - Document-based NoSQL database
+  - Real-time synchronization
+  - Offline support
+  - Complex queries with compound indexes
+
+- **Firebase Storage:** Secure file storage
+  - Resume file uploads (PDF, DOCX, TXT, MD)
+  - Profile photos and images
+  - Document attachments for feedback
+  - Automatic CDN distribution
+
+- **Security:** Comprehensive protection
+  - Firestore security rules
+  - Authentication middleware
+  - CORS configuration
+  - Input validation and sanitization
+
+---
 
 ## 📚 Documentation
 
 ### Core Documentation
+
 - **[📋 Project Index](docs/PROJECT_INDEX.md)** - Master hub with complete project overview
-- **[🔌 API Reference](docs/API_REFERENCE.md)** - Detailed documentation for all 30 endpoints
+- **[🔌 API Reference](docs/API_REFERENCE.md)** - Detailed documentation for all 47+ endpoints
 - **[🧩 Component Guide](docs/COMPONENT_GUIDE.md)** - Component architecture and patterns
 
 ### Technical Guides
-- **[Multi-Agent Scoring](docs/multi-agent-scoring-guide.md)** - AI scoring system architecture
-- **[Batch Job Processing](docs/batch-job-search-plan.md)** - Automated job processing
+
 - **[Firebase Indexes](docs/firestore-indexes.md)** - Required database configuration
 - **[Google Cloud Setup](docs/google-cloud-setup-checklist.md)** - Deployment guide
+- **[Multi-Agent System](docs/multi-agent-scoring-guide.md)** - AI system architecture
 
 ### Implementation Resources
+
 - **[lib/types.ts](lib/types.ts)** - Complete TypeScript definitions
 - **[lib/prompts/](lib/prompts/)** - Centralized AI prompt management
 - **[components/](components/)** - 60+ React components with shadcn/ui
-- **[app/api/](app/api/)** - 30 API endpoints for platform functionality
+- **[app/api/](app/api/)** - 47+ API endpoints for platform functionality
+
+### Important File Locations
+
+- **Authentication**: `components/auth-provider.tsx`, `components/auth-modal.tsx`
+- **Resume Features**: `components/resume-upload.tsx`, `app/resumes/page.tsx`
+- **AI Features**: `lib/gemini-client.ts`, `lib/prompts/`, `app/api/resume/tailor-multi-agent/`
+- **Interview Prep**: `app/interview-prep/`, `components/interview/`, `lib/prompts/interview/`
+- **Admin Panel**: `components/admin/`, `app/admin/`, `app/api/admin/`
+- **Database Types**: `lib/types.ts` (User, Resume, SavedJob, CoverLetter, InterviewSession)
+
+---
 
 ## 🤝 Contributing
 
 ### Development Workflow
+
 1. **Setup:** Follow [Getting Started](#-getting-started) instructions
 2. **Architecture:** Review [Project Index](docs/PROJECT_INDEX.md) for overview
 3. **APIs:** Consult [API Reference](docs/API_REFERENCE.md) for endpoint details
@@ -384,17 +816,21 @@ myjob/
 5. **Testing:** Ensure Firebase integration and AI feature testing
 
 ### Code Quality Standards
+
 - **TypeScript:** Strict mode with comprehensive type definitions
 - **Security:** Proper Firestore rules and authentication middleware
 - **Error Handling:** User-friendly error messages and graceful degradation
-- **Performance:** Optimized AI processing with caching and parallel execution
+- **Performance:** Optimized AI processing with caching and efficient queries
+- **Accessibility:** WCAG compliance with semantic HTML and ARIA labels
 
 ### Contribution Guidelines
+
 - Follow existing code patterns and component structure
 - Add appropriate TypeScript types for new features
 - Include proper error handling and loading states
 - Update documentation for new features or changes
 - Test Firebase integration and AI functionality thoroughly
+- Ensure accessibility compliance for UI components
 
 ---
 
@@ -402,207 +838,190 @@ myjob/
 
 ### How does the AI resume optimization work?
 
-MyJob uses **8 specialized AI agents** running in parallel to optimize your resume:
-1. **Technical Skills Agent** - Matches and highlights relevant technical skills
-2. **Experience Reframing Agent** - Rewrites experience to match job requirements
-3. **Achievement Amplification Agent** - Quantifies and emphasizes accomplishments
-4. **ATS Optimization Agent** - Ensures keyword optimization for Applicant Tracking Systems
-5. **Professional Summary Agent** - Crafts compelling executive summaries
-6. **Education & Certifications Agent** - Aligns qualifications with job needs
-7. **Gap Mitigation Agent** - Strategically addresses career gaps
-8. **Industry Alignment Agent** - Tailors language for specific industries
+JobCopilot uses **Google Gemini 2.5 Flash Lite** for ultra-fast resume optimization:
 
-**Processing time**: 30-60 seconds (vs. 4+ minutes with sequential processing)
-**Result**: Real-time streaming updates with copy-to-clipboard functionality
+**Process:**
+1. Upload your resume (PDF, DOCX, TXT, or Markdown)
+2. Provide job description and target role
+3. AI analyzes requirements and optimizes resume in ~5 seconds
+4. Review tailored resume with highlighted changes
+5. Download or save multiple versions
 
-### What AI model does MyJob use?
+**Key Features:**
+- ATS keyword optimization
+- Achievement amplification with metrics
+- Experience reframing for role relevance
+- Professional summary enhancement
+- Industry-specific terminology
+- Gap mitigation strategies
 
-MyJob uses **OpenRouter API** with access to multiple state-of-the-art models:
-- **Primary**: GPT-4, Claude Sonnet, and other frontier models
-- **Fallback**: Intelligent model switching for reliability
-- **Streaming**: Real-time response streaming for better UX
+### What AI models does JobCopilot use?
 
-All prompts are managed through a centralized **PromptManager** system with caching, retry logic, and usage statistics.
+**Primary AI:** Google Gemini AI
+- **Model:** Gemini 2.5 Flash Lite (primary)
+- **Alternative:** Gemini 2.0 Flash Exp (complex analysis)
+- **Speed:** ~5 second resume tailoring
+- **Quality:** Professional-grade output
+- **Cost:** Optimized API usage
 
-### How accurate is the job matching score?
+**Secondary AI:** OpenRouter (legacy support)
+- GPT-4o-mini for specialized tasks
+- Fallback system for reliability
+- Multi-agent capabilities
 
-The multi-agent scoring system provides **weighted analysis across 6 dimensions**:
-- Technical Skills: 25%
-- Experience Depth: 25%
-- Achievements: 20%
-- Education: 10%
-- Soft Skills: 10%
-- Career Progression: 10%
-
-**Accuracy**: Based on comprehensive resume analysis and job description parsing
-**Transparency**: Detailed breakdown showing strengths, weaknesses, and improvement suggestions
-**Validation**: Tested against hundreds of job applications with positive feedback
+All prompts are managed through a centralized **PromptManager** system with intelligent caching and error handling.
 
 ### Is my resume data secure and private?
 
-**Yes**. Security is a top priority:
-- ✅ **Firebase Authentication**: Industry-standard auth with Google OAuth
-- ✅ **Firestore Security Rules**: Strict data access controls
-- ✅ **HTTPS Only**: All data transmitted securely
-- ✅ **No Data Sharing**: Your resumes and data are never shared with third parties
-- ✅ **User Ownership**: You own your data and can delete it anytime
-- ✅ **Session Security**: Automatic timeout after 1 hour of inactivity
+**Yes, absolutely!** Security is our top priority:
 
-See [Firestore rules](firestore.rules) for complete security implementation.
+✅ **Firebase Authentication** - Industry-standard auth with Google OAuth
+✅ **Firestore Security Rules** - Strict data access controls
+✅ **HTTPS Only** - All data transmitted securely
+✅ **No Data Sharing** - Your resumes and data are never shared with third parties
+✅ **User Ownership** - You own your data and can delete it anytime
+✅ **Session Security** - Automatic timeout after 1 hour of inactivity
+✅ **Server-Side Processing** - Sensitive operations use Firebase Admin SDK
+
+See [firestore.rules](firestore.rules) for complete security implementation.
 
 ### Can I use this for free?
 
-**Yes!** MyJob is free to use with:
-- ✅ Unlimited job searches
-- ✅ AI-powered resume optimization
-- ✅ Cover letter generation
-- ✅ Application tracking
-- ✅ PDF generation
+**Yes!** JobCopilot is open-source and free to use with:
 
-**Note**: OpenRouter API usage may incur costs based on your API key usage. Set up your own OpenRouter API key in environment variables.
+✅ Unlimited resume uploads and versions
+✅ AI-powered resume optimization
+✅ Cover letter generation
+✅ Interview preparation with AI coaching
+✅ Application tracking
+✅ PDF document generation
+
+**Note:** You'll need your own API keys:
+- **Google Gemini API** - Required for AI features (generous free tier available)
+- **The Companies API** - Optional for company data (free tier available)
 
 ### What file formats are supported for resume upload?
 
 Supported formats with intelligent text extraction:
-- ✅ **PDF** (.pdf) - Using pdf-parse library
-- ✅ **DOCX** (.docx) - Using mammoth library
-- ✅ **Markdown** (.md) - Native support
-- ✅ **Text** (.txt) - Plain text
 
-**Max file size**: 10MB
-**Processing**: Automatic text extraction with formatting preservation
-**Validation**: File type and size validation with user-friendly error messages
+✅ **PDF** (.pdf) - Using pdf-parse library with layout preservation
+✅ **DOCX** (.docx) - Using mammoth library with style conversion
+✅ **Markdown** (.md) - Native support with full formatting
+✅ **Text** (.txt) - Plain text with automatic structure detection
+
+**File Requirements:**
+- **Max file size:** 10MB
+- **Processing:** Automatic text extraction with formatting preservation
+- **Validation:** File type and size validation with user-friendly error messages
+- **Storage:** Secure Firebase Storage integration
+
+### How does the interview preparation work?
+
+JobCopilot provides **comprehensive interview preparation** with 5 specialized practice modes:
+
+**Interview Types:**
+
+1. **Interview Tips & Guidance**
+   - General preparation strategies
+   - STAR method framework
+   - Common question patterns
+   - Body language and communication tips
+
+2. **Recruiter Screening**
+   - HR phone screen practice
+   - Salary negotiation strategies
+   - Background verification prep
+   - Timeline and availability discussions
+
+3. **Technical Assessment**
+   - Coding challenges and algorithms
+   - 5-step problem-solving framework
+   - Live coding strategies
+   - Debugging and optimization techniques
+
+4. **Technical & Behavioral**
+   - Hybrid questions combining technical + soft skills
+   - Technical STAR method examples
+   - Leadership and impact storytelling
+   - Project narrative development
+
+5. **Team & Culture Fit**
+   - Collaboration scenarios
+   - Conflict resolution examples
+   - DEI contributions and cultural awareness
+   - Values alignment assessment
+
+**How It Works:**
+
+1. **Auto-Display Tips**: Specialized tips appear immediately when you select an interview type
+2. **Interactive Practice**: Click "Start Practice" to begin Q&A with AI
+3. **AI-Generated Questions**: Context-aware questions based on your resume and job description
+4. **Answer Analysis**: Comprehensive feedback with rating (1-10), strengths, improvements, and suggested enhanced response
+5. **Session Tracking**: Each interview type maintains separate conversation history
+
+**AI Intelligence:**
+- Questions tailored to job requirements and your experience
+- No question repetition across sessions
+- Structured feedback with actionable improvements
+- Progress persistence across sessions
 
 ### How do I deploy this to production?
 
-**Recommended**: Google Cloud Run (fully containerized)
+**Recommended:** Google Cloud Run (fully containerized)
 
-**Quick deployment**:
+**Quick Deployment:**
+
 ```bash
 # Build Docker image
-docker build -t gcr.io/YOUR_PROJECT/myapp .
+docker build -t gcr.io/YOUR_PROJECT/jobcopilot .
 
 # Push to Google Container Registry
-docker push gcr.io/YOUR_PROJECT/myapp
+docker push gcr.io/YOUR_PROJECT/jobcopilot
 
 # Deploy to Cloud Run
-gcloud run deploy myapp --image gcr.io/YOUR_PROJECT/myapp
+gcloud run deploy jobcopilot --image gcr.io/YOUR_PROJECT/jobcopilot
 ```
 
-**Complete guide**: See [DOCKER_README.md](DOCKER_README.md) and [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)
+**Complete Guides:**
+- [DOCKER_README.md](DOCKER_README.md) - Dockerfile details and manual Docker commands
+- [docs/google-cloud-setup-checklist.md](docs/google-cloud-setup-checklist.md) - Production deployment
 
-**Alternative platforms**:
+**Alternative Platforms:**
 - AWS ECS/Fargate
 - Azure Container Apps
 - DigitalOcean App Platform
 - Railway/Render
+- Vercel (with limitations on serverless functions)
 
-### What's the difference between this and other job search platforms?
+**Environment Variables:**
+Ensure all required environment variables are set in your cloud platform:
+- Firebase configuration (NEXT_PUBLIC_* variables)
+- Google Gemini API key
+- Firebase Admin credentials (service account)
+- Optional: The Companies API, GitHub token, Gmail credentials
 
-**MyJob advantages**:
-1. **Multi-Agent AI System**: 8 specialized agents vs. single-model processing
-2. **Parallel Processing**: 4-8x faster resume optimization
-3. **Real-Time Streaming**: Live progress updates during AI processing
+### What's the difference between this and other job platforms?
+
+**JobCopilot Advantages:**
+
+1. **AI-Powered Optimization**: Google Gemini AI for 5-second resume tailoring
+2. **Comprehensive Interview Prep**: 5 specialized interview types with AI coaching
+3. **Professional Document Generation**: High-quality PDF generation with Puppeteer
 4. **Open Source**: Full transparency and customization
 5. **Self-Hosted**: Complete data ownership and privacy
 6. **Modern Stack**: Next.js 15, React 19, TypeScript, Firebase
-7. **Comprehensive**: Job search, resume optimization, cover letters, and tracking in one platform
+7. **All-in-One Platform**: Resume optimization, cover letters, interview prep, and application tracking
 
-### How do I set up the development environment?
-
-**Quick start**:
-```bash
-# Clone repository
-git clone https://github.com/jsong1004/myjob.git
-cd myjob
-
-# Install dependencies
-pnpm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
-
-# Run development server
-pnpm dev
-```
-
-**Requirements**:
-- Node.js 18+
-- pnpm (or npm/yarn)
-- Firebase project
-- OpenRouter API key
-- SerpAPI key (for job search)
-
-**Complete setup**: See [Getting Started](#-getting-started) section above
-
-### Can I customize the AI prompts and scoring?
-
-**Yes!** MyJob has a centralized prompt management system:
-
-**Location**: `lib/prompts/` directory
-- `manager.ts` - PromptManager with caching and retry logic
-- `types.ts` - TypeScript definitions for all prompts
-- `job-matching/` - Job scoring agent prompts
-- `resume-tailoring-engine.ts` - Resume optimization prompts
-- `cover-letter-variants.ts` - Cover letter templates
-- `interview/` - Interview preparation prompts (5 specialized tip functions + question generation)
-
-**Customization**:
-1. Edit prompts in respective files
-2. Adjust scoring weights in job-matching agents
-3. Add new prompt variants
-4. Modify system roles in `shared/system-roles.ts`
-
-**Best practices**: Test prompt changes thoroughly and maintain prompt versioning
-
-### Does this work with Applicant Tracking Systems (ATS)?
-
-**Yes!** MyJob includes dedicated **ATS Optimization Agent**:
-- ✅ Keyword matching and density optimization
-- ✅ ATS-friendly formatting (no complex layouts)
-- ✅ Proper section headers and structure
-- ✅ Standard fonts and readable text
-- ✅ Avoids images, tables, and graphics in critical sections
-
-**PDF Generation**: Creates ATS-compatible PDFs with proper text extraction
-
-### How does the AI interview preparation work?
-
-MyJob provides **comprehensive interview preparation** with 5 specialized practice modes:
-
-**Interview Types**:
-1. **Interview Tips & Guidance** - General preparation strategies covering STAR method, common questions, body language
-2. **Recruiter Screening** - HR phone screen practice with salary negotiation and background verification strategies
-3. **Technical Assessment** - Coding challenges with 5-step problem-solving framework and algorithm practice
-4. **Technical & Behavioral** - Hybrid questions combining technical depth with STAR method storytelling
-5. **Team & Culture Fit** - Collaboration scenarios, conflict resolution, and cultural alignment assessment
-
-**How it works**:
-1. **Auto-Display Tips**: When you select an interview type, specialized tips appear immediately (no generic intro)
-2. **Type-Specific Guidance**: Each type provides unique, actionable preparation content
-   - Recruiter: Salary scripts, timeline prep, red flags to avoid
-   - Technical: Problem-solving frameworks, live coding tips, when you're stuck strategies
-   - Behavioral: Technical STAR method, leadership without being a manager
-   - Culture: DEI contributions, culture add vs fit, conflict resolution examples
-3. **Interactive Practice**: Click "Start Practice" to begin Q&A
-   - AI generates questions based on your resume and job description
-   - You answer the question
-   - AI analyzes your answer with rating (1-10), strengths, improvements, suggested answer
-   - Next question automatically generated
-4. **Session Tracking**: Each interview type maintains separate conversation history
-
-**AI Intelligence**:
-- **Context-aware questions**: Tailored to job requirements and your experience
-- **No repetition**: Tracks previous questions to avoid duplicates
-- **Structured feedback**: Rating, score, strengths, improvements, enhanced answer suggestion
-- **Persistent state**: Switch between types anytime, progress is saved
-
-**Result**: Complete interview preparation covering every stage from HR screening to final culture fit assessment.
+**Focus Areas:**
+- Resume optimization and tailoring
+- Interview preparation and coaching
+- Application organization and tracking
+- Professional document generation
 
 ### How do I run this with Docker?
 
-**Quick start with Docker Compose**:
+**Quick Start with Docker Compose:**
+
 ```bash
 # Build and run with docker-compose
 docker-compose up --build
@@ -614,49 +1033,77 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-**Application available at**: http://localhost:3000
+**Application available at:** http://localhost:3000
 
-**Docker Compose Features**:
-- ✅ Automatic environment variable loading from `.env.local`
-- ✅ Chromium/Puppeteer configuration with proper security settings
-- ✅ 2GB shared memory for browser automation
-- ✅ Health checks and auto-restart
-- ✅ Service account key mounting for local development
-- ✅ Production-ready configuration
-
-**Complete Docker guides**:
-- **[DOCKER_README.md](DOCKER_README.md)** - Dockerfile details and manual Docker commands
-- **[DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md)** - Google Cloud Run deployment guide
+**Docker Compose Features:**
+✅ Automatic environment variable loading from `.env.local`
+✅ Chromium/Puppeteer configuration with proper security settings
+✅ 2GB shared memory for browser automation
+✅ Health checks and auto-restart
+✅ Service account key mounting for local development
+✅ Production-ready configuration
 
 **Manual Docker Build** (without compose):
+
 ```bash
 # Build image
-docker build -t myjob .
+docker build -t jobcopilot .
 
 # Run container
-docker run -p 3000:3000 --env-file .env.local myjob
+docker run -p 3000:3000 --env-file .env.local jobcopilot
 ```
 
-**Features**:
-- ✅ Complete Next.js 15 build with 51/51 static pages
-- ✅ Chromium for PDF generation and web scraping
-- ✅ Firebase integration with service account support
-- ✅ ~1.2GB optimized multi-stage image
-- ✅ 232ms startup time with health monitoring
+**Docker Features:**
+✅ Complete Next.js 15 build with optimized production setup
+✅ Chromium for PDF generation and browser automation
+✅ Firebase integration with service account support
+✅ ~1.2GB optimized multi-stage image
+✅ Fast startup time with health monitoring
+
+**Complete Docker Guides:**
+- **[DOCKER_README.md](DOCKER_README.md)** - Comprehensive Docker documentation
+- **[docker-compose.yml](docker-compose.yml)** - Docker Compose configuration
+
+### Can I customize the AI prompts?
+
+**Yes!** JobCopilot has a centralized prompt management system:
+
+**Location:** `lib/prompts/` directory
+
+**Prompt Categories:**
+- `manager.ts` - PromptManager with caching and retry logic
+- `types.ts` - TypeScript definitions for all prompts
+- `resume/` - Resume processing and tailoring prompts
+- `cover-letter/` - Cover letter generation templates
+- `interview/` - Interview preparation prompts (5 specialized types)
+- `shared/` - Common templates and system roles
+
+**Customization Steps:**
+1. Edit prompts in respective files
+2. Modify system roles in `shared/system-roles.ts`
+3. Add new prompt variants or templates
+4. Update type definitions if adding new prompt types
+5. Test changes thoroughly with real examples
+
+**Best Practices:**
+- Maintain prompt versioning for rollback capability
+- Test prompt changes with diverse inputs
+- Monitor AI response quality after changes
+- Document custom prompts for team collaboration
 
 ---
 
 ## 🏷️ SEO Keywords & Topics
 
-**Primary Keywords**: AI resume builder, job search automation, resume optimization AI, ATS resume checker, cover letter generator AI, job application tracker, career development tools, AI interview practice, interview preparation platform
+**Primary Keywords**: AI resume builder, resume optimization AI, ATS resume checker, cover letter generator AI, job application tracker, career development tools, AI interview practice, interview preparation platform, resume tailoring
 
-**Technology Keywords**: Next.js 15 app, React 19, Firebase authentication, OpenRouter AI, Google Gemini AI, multi-agent system, parallel AI processing, TypeScript job platform, Docker containerization, Google Cloud Run
+**Technology Keywords**: Next.js 15 app, React 19, Firebase authentication, Google Gemini AI, TypeScript job platform, Docker containerization, Google Cloud Run, AI resume optimizer
 
-**Use Cases**: Resume tailoring, job matching algorithm, career transition, interview preparation, ATS optimization, professional resume builder, AI career coach, job search organization, technical interview practice, behavioral interview training, recruiter screening prep, culture fit assessment
+**Use Cases**: Resume tailoring, career transition, interview preparation, ATS optimization, professional resume builder, AI career coach, job application organization, technical interview practice, behavioral interview training, recruiter screening prep, culture fit assessment
 
-**Interview Keywords**: AI interview coach, technical interview prep, behavioral interview practice, STAR method training, recruiter screening tips, salary negotiation strategies, coding interview practice, system design interview, culture fit questions, interview feedback AI
+**Interview Keywords**: AI interview coach, technical interview prep, behavioral interview practice, STAR method training, recruiter screening tips, salary negotiation strategies, coding interview practice, culture fit questions, interview feedback AI, mock interview platform
 
-**Developer Keywords**: Next.js Docker setup, Firebase integration, AI prompt engineering, multi-agent orchestration, streaming API responses, TypeScript best practices, React Server Components
+**Developer Keywords**: Next.js Docker setup, Firebase integration, AI prompt engineering, TypeScript best practices, React Server Components, Gemini AI integration, shadcn/ui components
 
 ---
 
@@ -666,4 +1113,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-**MyJob** - Empowering job seekers with intelligent AI-driven tools for modern career success.
+**JobCopilot** - Empowering job seekers with intelligent AI-driven tools for modern career success.
+
+Built with ❤️ using Next.js 15, React 19, Google Gemini AI, and Firebase
